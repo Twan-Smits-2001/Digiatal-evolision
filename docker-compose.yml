@@ -10,8 +10,8 @@ services:
           memory: "512M"
     environment:
       WORDPRESS_DB_HOST: mysql
-      WORDPRESS_DB_USER: wpuser
-      WORDPRESS_DB_PASSWORD: wppassword
+      WORDPRESS_DB_USER: mark
+      WORDPRESS_DB_PASSWORD: Vrieskist@247
       WORDPRESS_DB_NAME: wpdatabase
     networks:
       - wordpress-net
@@ -27,10 +27,10 @@ services:
           cpus: "0.5"
           memory: "1G"
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: Vrieskist@247
       MYSQL_DATABASE: wpdatabase
-      MYSQL_USER: wpuser
-      MYSQL_PASSWORD: wppassword
+      MYSQL_USER: mark
+      MYSQL_PASSWORD: Vrieskist@247
     networks:
       - wordpress-net
     volumes:
