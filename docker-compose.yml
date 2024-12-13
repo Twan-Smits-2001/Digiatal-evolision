@@ -1,0 +1,41 @@
+version: "3.9"
+services:
+  wordpress:
+    image: wordpress:latest
+    deploy:
+      replicas: 3  # Number of WordPress instances
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppassword
+      WORDPRESS_DB_NAME: wpdatabase
+    networks:
+      - wordpress-net
+    volumes:
+      - /mnt/nfs/docker-data/live/webserver:/var/www/html
+
+  mysql:
+    image: mysql:latest
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "1G"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: wpdatabase
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppassword
+    networks:
+      - wordpress-net
+    volumes:
+      - /mnt/nfs/docker-data/live/database:/var/lib/mysql
+
+networks:
+  wordpress-net:
+    driver: overlay
