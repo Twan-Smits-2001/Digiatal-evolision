@@ -1,4 +1,4 @@
-# Digiatal-evolision
+# Digiatal-evolution
 Dit is de github van het bedrijf DE
 Alles is zo als het moet voor dit bestand hebben we een paar intersses toe gevoegt hier heeft u de inhouds opgave:
 
