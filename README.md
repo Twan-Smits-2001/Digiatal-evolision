@@ -4,7 +4,7 @@ Alles is zo als het moet voor dit bestand hebben we een paar intersses toe gevoe
 
 1.Verhaaltje
 2.team focus
-3.Viezie & high level disyn
+3.Visie & high level design
 
 
 
