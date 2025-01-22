@@ -1,0 +1,76 @@
+#test files om te controleren of het werkt (stapsgewijs).
+- name: Create Azure VM
+  hosts: localhost
+  connection: local
+  tasks:
+  - name: Create resource group
+    azure_rm_resourcegroup:
+      name: A2S2_groep_04
+      location: westeurope
+
+  - name: Create virtual network
+    azure_rm_virtualnetwork:
+      resource_group: A2S2_groep_04
+      name: myVnet
+      address_prefixes: "10.0.0.0/16"
+
+  - name: Add subnet
+    azure_rm_subnet:
+      resource_group: A2S2_groep_04
+      name: mySubnet
+      address_prefix: "10.0.1.0/24"
+      virtual_network: myVnet
+
+  - name: Create public IP address
+    azure_rm_publicipaddress:
+      resource_group: A2S2_groep_04
+      allocation_method: Static
+      name: myPublicIP
+    register: output_ip_address
+
+  - name: Public IP of VM
+    debug:
+      msg: "The public IP is {{ output_ip_address.state.ip_address }}."
+
+  - name: Create Network Security Group that allows SSH
+    azure_rm_securitygroup:
+      resource_group: A2S2_groep_04
+      name: myNetworkSecurityGroup
+      rules:
+        - name: SSH
+          protocol: Tcp
+          destination_port_range: 22
+          access: Allow
+          priority: 1001
+          direction: Inbound
+
+  - name: Create virtual network interface card
+    azure_rm_networkinterface:
+      resource_group: A2S2_groep_04
+      name: myNIC
+      virtual_network: myVnet
+      subnet: mySubnet
+      security_group: myNetworkSecurityGroup
+      ip_forwarding: true
+      ip_configurations:
+        - name: myNICipconfig
+          public_ip_address_name: myPublicIP
+          primary: true
+
+  - name: Create VM
+    azure_rm_virtualmachine:
+      resource_group: A2S2_groep_04
+      name: Docker1
+      vm_size: Standard_B1ms
+      admin_username: groep04_admin
+      ssh_password_enabled: false
+      ssh_public_keys:
+        - path: /home/groep04_admin/.ssh/authorized_keys
+          key_data: "ssh-rsa jouwhelelangepublicsshkeyingekortADAQABAAABgQCgnVENGE2Wa4mkuiQg67+qOhYg3lG60LcNMKPNzokxaLVskcoToVLfU3fl31CzbcE3WnkHA6vv7ai27km38U02ECN6kTkBq5v8="
+      network_interfaces: myNIC
+      managed_disk_type: Standard_LRS
+      image:
+        offer: 0001-com-ubuntu-server-jammy
+        publisher: Canonical
+        sku: 22_04-lts
+        version: latest
