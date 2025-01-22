@@ -99,7 +99,7 @@
     ssh_password_enabled: false
     ssh_public_keys:
       - path: /home/groep04_admin/.ssh/authorized_keys
-# hier moet nog key worden angepast
+# hier moet nog key worden angepast         SHA256:FlIqlgbmlaSTVK32cV2V6qFmcQCWlbL11fywzgVLW1w  (user)
         key_data: "ssh-rsa YOUR_PUBLIC_KEY"
     network_interfaces: KubeMasterNIC
     managed_disk_type: Standard_LRS
