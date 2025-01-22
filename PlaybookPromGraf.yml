@@ -1,0 +1,89 @@
+- name: Create Grafana Monitoring VM
+  hosts: localhost
+  connection: local
+  tasks:
+  - name: Create resource group
+    azure_rm_resourcegroup:
+      name: A2S2_groep_04
+      location: westeurope
+
+  - name: Create public IP address for Grafana
+    azure_rm_publicipaddress:
+      resource_group: A2S2_groep_04
+      allocation_method: Static
+      name: GrafanaPublicIP
+    register: grafana_ip
+
+  - name: Create Network Security Group for Grafana
+    azure_rm_securitygroup:
+      resource_group: A2S2_groep_04
+      name: GrafanaNetworkSecurityGroup
+      rules:
+        - name: SSH
+          protocol: Tcp
+          destination_port_range: 22
+          access: Allow
+          priority: 1001
+          direction: Inbound
+        - name: Grafana
+          protocol: Tcp
+          destination_port_range: 3000
+          access: Allow
+          priority: 1002
+          direction: Inbound
+
+  - name: Create virtual network interface for Grafana
+    azure_rm_networkinterface:
+      resource_group: A2S2_groep_04
+      name: GrafanaNIC
+      virtual_network: KubeVnet
+      subnet: KubeSubnet
+      security_group: GrafanaNetworkSecurityGroup
+      ip_forwarding: true
+      ip_configurations:
+        - name: GrafanaNICConfig
+          public_ip_address_name: GrafanaPublicIP
+          primary: true
+
+  - name: Create Grafana VM
+    azure_rm_virtualmachine:
+      resource_group: A2S2_groep_04
+      name: Grafana
+      vm_size: Standard_B2ms
+      admin_username: groep04_admin
+      ssh_password_enabled: false
+      ssh_public_keys:
+        - path: /home/groep04_admin/.ssh/authorized_keys
+# hier nog ssh key toevoegen
+          key_data: "ssh-rsa YOUR_PUBLIC_KEY"
+      network_interfaces: GrafanaNIC
+      managed_disk_type: Standard_LRS
+      image:
+        offer: 0001-com-ubuntu-server-jammy
+        publisher: Canonical
+        sku: 22_04-lts
+        version: latest
+      custom_data: |
+        #cloud-config
+        package_update: true
+        package_upgrade: true
+        packages:
+          - apt-transport-https
+          - software-properties-common
+          - curl
+          - wget
+        runcmd:
+          - curl -fsSL https://packages.grafana.com/gpg.key | apt-key add -
+          - add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
+          - apt-get update && apt-get install -y grafana
+          - systemctl start grafana-server
+          - systemctl enable grafana-server
+          - curl -LO https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+          - tar -xzf prometheus-2.45.0.linux-amd64.tar.gz -C /usr/local/bin
+          - mv /usr/local/bin/prometheus-2.45.0.linux-amd64 /usr/local/bin/prometheus
+          - curl -o /etc/prometheus.yml https://raw.githubusercontent.com/prometheus/prometheus/main/documentation/examples/prometheus-kubernetes.yml
+          - systemctl start prometheus
+          - systemctl enable prometheus
+          - grafana-cli plugins install grafana-piechart-panel
+          - grafana-cli plugins install prometheus-datasource
+          - systemctl restart grafana-server
