@@ -1,0 +1,140 @@
+# complete yml file voor gehel configuratie.
+- name: Create Azure VM Docker Instances
+  hosts: localhost
+  connection: local
+  tasks:
+  - name: Create resource group
+    azure_rm_resourcegroup:
+      name: A2S2_groep_04
+      location: westeurope
+
+  - name: Create virtual network
+    azure_rm_virtualnetwork:
+      resource_group: A2S2_groep_04
+      name: DockerVnet
+      address_prefixes: "10.0.0.0/16"
+
+  - name: Add subnet
+    azure_rm_subnet:
+      resource_group: A2S2_groep_04
+      name: DockerSubnet
+      address_prefix: "10.0.1.0/24"
+      virtual_network: DockerVnet
+
+  - name: Create public IP address for Docker1
+    azure_rm_publicipaddress:
+      resource_group: A2S2_groep_04
+      allocation_method: Static
+      name: Docker1PublicIP
+    register: docker1_ip
+
+  - name: Create public IP address for Docker2
+    azure_rm_publicipaddress:
+      resource_group: A2S2_groep_04
+      allocation_method: Static
+      name: Docker2PublicIP
+    register: docker2_ip
+
+  - name: Create Network Security Group for Docker1
+    azure_rm_securitygroup:
+      resource_group: A2S2_groep_04
+      name: Docker1NetworkSecurityGroup
+      rules:
+        - name: SSH
+          protocol: Tcp
+          destination_port_range: 22
+          access: Allow
+          priority: 1001
+          direction: Inbound
+
+  - name: Create Network Security Group for Docker2
+    azure_rm_securitygroup:
+      resource_group: A2S2_groep_04
+      name: Docker2NetworkSecurityGroup
+      rules:
+        - name: SSH
+          protocol: Tcp
+          destination_port_range: 22
+          access: Allow
+          priority: 1001
+          direction: Inbound
+
+  - name: Create virtual network interface card for Docker1
+    azure_rm_networkinterface:
+      resource_group: A2S2_groep_04
+      name: Docker1NIC
+      virtual_network: DockerVnet
+      subnet: DockerSubnet
+      security_group: Docker1NetworkSecurityGroup
+      ip_forwarding: true
+      ip_configurations:
+        - name: Docker1NICipconfig
+          public_ip_address_name: Docker1PublicIP
+          primary: true
+
+  - name: Create virtual network interface card for Docker2
+    azure_rm_networkinterface:
+      resource_group: A2S2_groep_04
+      name: Docker2NIC
+      virtual_network: DockerVnet
+      subnet: DockerSubnet
+      security_group: Docker2NetworkSecurityGroup
+      ip_forwarding: true
+      ip_configurations:
+        - name: Docker2NICipconfig
+          public_ip_address_name: Docker2PublicIP
+          primary: true
+
+- name: Create VM Docker1 with Docker Installed
+  azure_rm_virtualmachine:
+    resource_group: A2S2_groep_04
+    name: Docker1
+    vm_size: Standard_B1ms
+    admin_username: groep04_admin
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/groep04_admin/.ssh/authorized_keys
+        key_data: "ssh-rsa jouwhelelangepublicsshkeyingekortADAQABAAABgQCgnVENGE2Wa4mkuiQg67+qOhYg3lG60LcNMKPNzokxaLVskcoToVLfU3fl31CzbcE3WnkHA6vv7ai27km38U02ECN6kTkBq5v8="
+    network_interfaces: Docker1NIC
+    managed_disk_type: Standard_LRS
+    image:
+      offer: 0001-com-ubuntu-server-jammy
+      publisher: Canonical
+      sku: 22_04-lts
+      version: latest
+    custom_data: |
+      #cloud-config
+      package_update: true
+      package_upgrade: true
+      packages:
+        - docker.io
+      runcmd:
+        - systemctl start docker
+        - systemctl enable docker
+
+- name: Create VM Docker2 with Docker Installed
+  azure_rm_virtualmachine:
+    resource_group: A2S2_groep_04
+    name: Docker2
+    vm_size: Standard_B1ms
+    admin_username: groep04_admin
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/groep04_admin/.ssh/authorized_keys
+        key_data: "ssh-rsa jouwhelelangepublicsshkeyingekortADAQABAAABgQCgnVENGE2Wa4mkuiQg67+qOhYg3lG60LcNMKPNzokxaLVskcoToVLfU3fl31CzbcE3WnkHA6vv7ai27km38U02ECN6kTkBq5v8="
+    network_interfaces: Docker2NIC
+    managed_disk_type: Standard_LRS
+    image:
+      offer: 0001-com-ubuntu-server-jammy
+      publisher: Canonical
+      sku: 22_04-lts
+      version: latest
+    custom_data: |
+      #cloud-config
+      package_update: true
+      package_upgrade: true
+      packages:
+        - docker.io
+      runcmd:
+        - systemctl start docker
+        - systemctl enable docker

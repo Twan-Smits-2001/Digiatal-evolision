@@ -1,0 +1,65 @@
+#cleanup file voor vms in Azure.
+- name: Cleanup
+  hosts: localhost
+  connection: local
+  tasks:
+  - name: Cleanup VM Docker1
+    azure_rm_virtualmachine:
+      resource_group: A2S2_groep_04
+      name: Docker1
+      state: absent
+
+  - name: Cleanup NIC Docker1
+    azure_rm_networkinterface:
+      resource_group: A2S2_groep_04
+      name: myNIC
+      state: absent
+
+  - name: Cleanup NSG Docker1
+    azure_rm_securitygroup:
+      resource_group: A2S2_groep_04
+      name: myNetworkSecurityGroup
+      state: absent
+
+  - name: Cleanup VM Docker2
+    azure_rm_virtualmachine:
+      resource_group: A2S2_groep_04
+      name: Docker2
+      state: absent
+
+  - name: Cleanup NIC Docker2
+    azure_rm_networkinterface:
+      resource_group: A2S2_groep_04
+      name: Docker2NIC
+      state: absent
+
+  - name: Cleanup NSG Docker2
+    azure_rm_securitygroup:
+      resource_group: A2S2_groep_04
+      name: Docker2NetworkSecurityGroup
+      state: absent
+
+  - name: Cleanup subnet
+    azure_rm_subnet:
+      resource_group: A2S2_groep_04
+      name: mySubnet
+      virtual_network: myVnet
+      state: absent
+
+  - name: Cleanup virtual network
+    azure_rm_virtualnetwork:
+      resource_group: A2S2_groep_04
+      name: myVnet
+      state: absent
+
+  - name: Cleanup public IP Docker1
+    azure_rm_publicipaddress:
+      resource_group: A2S2_groep_04
+      name: myPublicIP
+      state: absent
+
+  - name: Cleanup public IP Docker2
+    azure_rm_publicipaddress:
+      resource_group: A2S2_groep_04
+      name: Docker2PublicIP
+      state: absent
