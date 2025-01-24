@@ -172,71 +172,68 @@
             public_ip_address_name: HAProxyPublicIP
             primary: true
 
-  - name: Create Grafana VM
-    azure_rm_virtualmachine:
-      resource_group: A2S2_groep_04
-      name: Grafana
-      vm_size: Standard_B2ms
-      admin_username: groep04_admin
-      ssh_password_enabled: false
-      ssh_public_keys:
-        - path: /home/groep04_admin/.ssh/authorized_keys
-# hier nog ssh key toevoegen
-          key_data: "ssh-dss AAAAB3NzaC1kc3MAAACBAI1OApEiXh3lWAv+QuPu8kxYBJPl+FvIV/z1o2qoCvlwpYyRQ+783nNaTjECOxMiwqk7MtXZ13KkvD91I2M0RhNSoFGH50Hx2nBuxx1D3+1vtRVzH2pAezrX9dZxk7rfK71p3sD4uL8NN5/6yNg9P1jVXygWmOa5LmD1xKN+WNQpAAAAFQCC4TLEiw6/eSoLrQfGMNVreIw0RQAAAIB/5novtYmkKgNPUgSI6ukOlS0fLmd/92yExdCW8p1m2dB95Lep6dZ4rIKImK7aGoXc/5Q0qDeOcMQGNsM3UHRBiEk4lw9mmAHyLHK6a1RG6ljFwm90odX13txIAwweeMPy6l6O6TYGT+CXCFTz4TwSULbZlGt0qmX/xZSEwik5ZgAAAIBC3y/dGeTXgO244UuiY525O9U+ypX6K8OoHS44xM8gAwhiEgJBS03x798vP9+Y70+ZHNFz0hDKwXqWynau0cOVUWnMJdajaUzYXhZm3bBgrbUQBrIMfGHO1EtaLZtZrlkC7vlXc/gr/KNvIgzDcnUm7jKLyhIa7dRX6aVAa6KzZg== root@ansible"
-      network_interfaces: GrafanaNIC
-      managed_disk_type: Standard_LRS
-      image:
-        offer: 0001-com-ubuntu-server-jammy
-        publisher: Canonical
-        sku: 22_04-lts
-        version: latest
-      custom_data: |
-        #cloud-config
-        package_update: true
-        package_upgrade: true
-        packages:
-          - apt-transport-https
-          - software-properties-common
-          - curl
-          - wget
-        runcmd:
-          - curl -fsSL https://packages.grafana.com/gpg.key | apt-key add -
-          - add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
-          - apt-get update && apt-get install -y grafana
-          - systemctl start grafana-server
-          - systemctl enable grafana-server
-          - curl -LO https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
-          - tar -xzf prometheus-2.45.0.linux-amd64.tar.gz -C /usr/local/bin
-          - mv /usr/local/bin/prometheus-2.45.0.linux-amd64 /usr/local/bin/prometheus
-          - curl -o /etc/prometheus.yml https://raw.githubusercontent.com/prometheus/prometheus/main/documentation/examples/prometheus-kubernetes.yml
-          - systemctl start prometheus
-          - systemctl enable prometheus
-          - grafana-cli plugins install grafana-piechart-panel
-          - grafana-cli plugins install prometheus-datasource
-          - systemctl restart grafana-server
-          - curl -X POST http://admin:admin@localhost:3000/api/datasources \
-            -H "Content-Type: application/json" \
-            -d '{
-                  "name": "Prometheus",
-                  "type": "prometheus",
-                  "url": "http://localhost:9090",
-                  "access": "proxy",
-                  "isDefault": true
-                }'
-          
-      write_files:
-        - path: /etc/prometheus/prometheus.yml
-          content: |
-            global:
-              scrape_interval: 15s
+    - name: Create Grafana VM
+      azure_rm_virtualmachine:
+        resource_group: A2S2_groep_04
+        name: Grafana
+        vm_size: Standard_B2ms
+        admin_username: groep04_admin
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/groep04_admin/.ssh/authorized_keys
+            key_data: "ssh-dss AAAAB3NzaC1kc3MAAACBAI1OApEiXh3lWAv+QuPu8kxYBJPl+FvIV/z1o2qoCvlwpYyRQ+783nNaTjECOxMiwqk7MtXZ13KkvD91I2M0RhNSoFGH50Hx2nBuxx1D3+1vtRVzH2pAezrX9dZxk7rfK71p3sD4uL8NN5/6yNg9P1jVXygWmOa5LmD1xKN+WNQpAAAAFQCC4TLEiw6/eSoLrQfGMNVreIw0RQAAAIB/5novtYmkKgNPUgSI6ukOlS0fLmd/92yExdCW8p1m2dB95Lep6dZ4rIKImK7aGoXc/5Q0qDeOcMQGNsM3UHRBiEk4lw9mmAHyLHK6a1RG6ljFwm90odX13txIAwweeMPy6l6O6TYGT+CXCFTz4TwSULbZlGt0qmX/xZSEwik5ZgAAAIBC3y/dGeTXgO244UuiY525O9U+ypX6K8OoHS44xM8gAwhiEgJBS03x798vP9+Y70+ZHNFz0hDKwXqWynau0cOVUWnMJdajaUzYXhZm3bBgrbUQBrIMfGHO1EtaLZtZrlkC7vlXc/gr/KNvIgzDcnUm7jKLyhIa7dRX6aVAa6KzZg== root@ansible"
+        network_interfaces: GrafanaNIC
+        managed_disk_type: Standard_LRS
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts
+          version: latest
+        custom_data: |
+          #cloud-config
+          package_update: true
+          package_upgrade: true
+          packages:
+            - apt-transport-https
+            - software-properties-common
+            - curl
+            - wget
+          runcmd:
+            - curl -fsSL https://packages.grafana.com/gpg.key | apt-key add -
+            - add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
+            - apt-get update && apt-get install -y grafana
+            - systemctl start grafana-server
+            - systemctl enable grafana-server
+            - curl -LO https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+            - tar -xzf prometheus-2.45.0.linux-amd64.tar.gz -C /usr/local/bin
+            - mv /usr/local/bin/prometheus-2.45.0.linux-amd64 /usr/local/bin/prometheus
+            - curl -o /etc/prometheus.yml https://raw.githubusercontent.com/prometheus/prometheus/main/documentation/examples/prometheus-kubernetes.yml
+            - systemctl start prometheus
+            - systemctl enable prometheus
+            - grafana-cli plugins install grafana-piechart-panel
+            - grafana-cli plugins install prometheus-datasource
+            - systemctl restart grafana-server
+            - curl -X POST http://admin:admin@localhost:3000/api/datasources \
+              -H "Content-Type: application/json" \
+              -d '{
+                    "name": "Prometheus",
+                    "type": "prometheus",
+                    "url": "http://localhost:9090",
+                    "access": "proxy",
+                    "isDefault": true
+                  }'
+        write_files:
+          - path: /etc/prometheus/prometheus.yml
+            content: |
+              global:
+                scrape_interval: 15s
 
-            scrape_configs:
-              - job_name: 'kubernetes_nodes'
-                static_configs:
-                  - targets:
-                      - KubeMaster:9100
-                      - KubeWorker:9100
-
+              scrape_configs:
+                - job_name: 'kubernetes_nodes'
+                  static_configs:
+                    - targets:
+                        - KubeMaster:9100
+                        - KubeWorker:9100
 
 - name: Create KubeMaster VM and Deploy Applications
   azure_rm_virtualmachine:
