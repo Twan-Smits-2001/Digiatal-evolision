@@ -108,7 +108,7 @@
             access: Allow
             priority: 1001
             direction: Inbound
-          - name: Load Balancer HTTP
+          - name: Load_Balancer_HTTP
             protocol: Tcp
             destination_port_range: 80
             access: Allow
