@@ -285,37 +285,36 @@
   register: kube_join_command
   delegate_to: KubeMaster
 
-  - name: Create KubeWorker VM and Join Kubernetes Cluster
-    azure_rm_virtualmachine:
-      resource_group: A2S2_groep_04
-      name: KubeWorker
-      vm_size: Standard_B2ms
-      admin_username: groep04_admin
-      ssh_password_enabled: false
-      ssh_public_keys:
-        - path: /home/groep04_admin/.ssh/authorized_keys
-# hier moet nog key worden angepast
-          key_data: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILblctV0E1azRBM3ORHWRz798XqSsdnccNnY7yuPmCNH root@ansible"
-      network_interfaces: KubeWorkerNIC
-      managed_disk_type: Standard_LRS
-      image:
-        offer: 0001-com-ubuntu-server-jammy
-        publisher: Canonical
-        sku: 22_04-lts
-        version: latest
-      custom_data: |
-        #cloud-config
-        package_update: true
-        package_upgrade: true
-        packages:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - kubeadm
-          - kubectl
-          - kubelet
-        runcmd:
-          - "{{ kube_join_command.stdout }}"
+- name: Create KubeWorker VM and Join Kubernetes Cluster
+  azure_rm_virtualmachine:
+    resource_group: A2S2_groep_04
+    name: KubeWorker
+    vm_size: Standard_B2ms
+    admin_username: groep04_admin
+    ssh_password_enabled: false
+    ssh_public_keys:
+      - path: /home/groep04_admin/.ssh/authorized_keys
+        key_data: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILblctV0E1azRBM3ORHWRz798XqSsdnccNnY7yuPmCNH root@ansible"
+    network_interfaces: KubeWorkerNIC
+    managed_disk_type: Standard_LRS
+    image:
+      offer: 0001-com-ubuntu-server-jammy
+      publisher: Canonical
+      sku: 22_04-lts
+      version: latest
+    custom_data: |
+      #cloud-config
+      package_update: true
+      package_upgrade: true
+      packages:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - kubeadm
+        - kubectl
+        - kubelet
+      runcmd:
+        - "{{ kube_join_command.stdout }}"
 
   - name: Install Flannel Network Plugin
     shell: |
