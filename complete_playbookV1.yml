@@ -114,7 +114,7 @@
             access: Allow
             priority: 1002
             direction: Inbound
-          - name: Load Balancer MySQL
+          - name: Load_Balancer_MySQL
             protocol: Tcp
             destination_port_range: 3306
             access: Allow
