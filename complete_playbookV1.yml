@@ -285,102 +285,102 @@
   register: kube_join_command
   delegate_to: KubeMaster
 
-- name: Create KubeWorker VM and Join Kubernetes Cluster
-  azure_rm_virtualmachine:
-    resource_group: A2S2_groep_04
-    name: KubeWorker
-    vm_size: Standard_B2ms
-    admin_username: groep04_admin
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/groep04_admin/.ssh/authorized_keys
+  - name: Create KubeWorker VM and Join Kubernetes Cluster
+    azure_rm_virtualmachine:
+      resource_group: A2S2_groep_04
+      name: KubeWorker
+      vm_size: Standard_B2ms
+      admin_username: groep04_admin
+      ssh_password_enabled: false
+      ssh_public_keys:
+        - path: /home/groep04_admin/.ssh/authorized_keys
 # hier moet nog key worden angepast
-        key_data: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILblctV0E1azRBM3ORHWRz798XqSsdnccNnY7yuPmCNH root@ansible"
-    network_interfaces: KubeWorkerNIC
-    managed_disk_type: Standard_LRS
-    image:
-      offer: 0001-com-ubuntu-server-jammy
-      publisher: Canonical
-      sku: 22_04-lts
-      version: latest
-    custom_data: |
-      #cloud-config
-      package_update: true
-      package_upgrade: true
-      packages:
-        - apt-transport-https
-        - ca-certificates
-        - curl
-        - kubeadm
-        - kubectl
-        - kubelet
-      runcmd:
-        - "{{ kube_join_command.stdout }}"
+          key_data: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILblctV0E1azRBM3ORHWRz798XqSsdnccNnY7yuPmCNH root@ansible"
+      network_interfaces: KubeWorkerNIC
+      managed_disk_type: Standard_LRS
+      image:
+        offer: 0001-com-ubuntu-server-jammy
+        publisher: Canonical
+        sku: 22_04-lts
+        version: latest
+      custom_data: |
+        #cloud-config
+        package_update: true
+        package_upgrade: true
+        packages:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - kubeadm
+          - kubectl
+          - kubelet
+        runcmd:
+          - "{{ kube_join_command.stdout }}"
 
-- name: Install Flannel Network Plugin
-  shell: |
-    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-  delegate_to: KubeMaster
+  - name: Install Flannel Network Plugin
+    shell: |
+      kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+    delegate_to: KubeMaster
 
-- name: Create HAProxy VM
-  azure_rm_virtualmachine:
-    resource_group: A2S2_groep_04
-    name: HAProxy
-    vm_size: Standard_B2ms
-    admin_username: groep04_admin
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/groep04_admin/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCmBK7ZQJdBiDFcJCzcIAIX5azgt3U/qEKgiOKspcv3zLtodeoqFeCzVA6gLkbknAhNFq2czjospX/qJ1vg3ASt/ccX17dnr1E97KV2P0FoawOS5jFqW1Nn3F4uqVpKAsUsSgmLQuRLY72NnY6K8DHuCnYvTTnQMf5h8ZQNinM5+1cw9IXy8oha2ev+lFixYsKqh81gAmLyfhfcEEsCdH8Vv7fz6FWDoXoBAY/gFcJJP2Xm6q9cMuC6f7Rl1swiY+JYlAU6sLTn9Y+Sscmfy9/plLRJYSQRH2vKjgqTUgHOs5bqyydufeO8/eEjszLSrFAmfg/MasTOHVv+q+fWnTRQJqGB8CiH3Cu3eMcO0nmGA2IXWgXQEb8+mn4s/IQah0ufts7yCFONxcM67W2xIJ2Ij8Ce99s8ORhfLNV2uH0iFsGxMp7MsmGX8E99i3xNMzAVdkYM55/USCHFBdbzD2yIYcj2K0RdIgt/AxGbtmDgR7qv1f4C7UGueCfQCGfzUo8= root@ansible"
-    network_interfaces: HAProxyNIC
-    managed_disk_type: Standard_LRS
-    image:
-      offer: 0001-com-ubuntu-server-jammy
-      publisher: Canonical
-      sku: 22_04-lts
-      version: latest
-    custom_data: |
-      #cloud-config
-      package_update: true
-      package_upgrade: true
-      packages:
-        - haproxy
-        - socat
-        - curl
-      write_files:
-        - path: /etc/haproxy/haproxy.cfg
-          content: |
-            global
-              log /dev/log local0
-              log /dev/log local1 notice
-              maxconn 4096
-              daemon
+  - name: Create HAProxy VM
+    azure_rm_virtualmachine:
+      resource_group: A2S2_groep_04
+      name: HAProxy
+      vm_size: Standard_B2ms
+      admin_username: groep04_admin
+      ssh_password_enabled: false
+      ssh_public_keys:
+        - path: /home/groep04_admin/.ssh/authorized_keys
+          key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCmBK7ZQJdBiDFcJCzcIAIX5azgt3U/qEKgiOKspcv3zLtodeoqFeCzVA6gLkbknAhNFq2czjospX/qJ1vg3ASt/ccX17dnr1E97KV2P0FoawOS5jFqW1Nn3F4uqVpKAsUsSgmLQuRLY72NnY6K8DHuCnYvTTnQMf5h8ZQNinM5+1cw9IXy8oha2ev+lFixYsKqh81gAmLyfhfcEEsCdH8Vv7fz6FWDoXoBAY/gFcJJP2Xm6q9cMuC6f7Rl1swiY+JYlAU6sLTn9Y+Sscmfy9/plLRJYSQRH2vKjgqTUgHOs5bqyydufeO8/eEjszLSrFAmfg/MasTOHVv+q+fWnTRQJqGB8CiH3Cu3eMcO0nmGA2IXWgXQEb8+mn4s/IQah0ufts7yCFONxcM67W2xIJ2Ij8Ce99s8ORhfLNV2uH0iFsGxMp7MsmGX8E99i3xNMzAVdkYM55/USCHFBdbzD2yIYcj2K0RdIgt/AxGbtmDgR7qv1f4C7UGueCfQCGfzUo8= root@ansible"
+      network_interfaces: HAProxyNIC
+      managed_disk_type: Standard_LRS
+      image:
+        offer: 0001-com-ubuntu-server-jammy
+        publisher: Canonical
+        sku: 22_04-lts
+        version: latest
+      custom_data: |
+        #cloud-config
+        package_update: true
+        package_upgrade: true
+        packages:
+          - haproxy
+          - socat
+          - curl
+        write_files:
+          - path: /etc/haproxy/haproxy.cfg
+            content: |
+              global
+                log /dev/log local0
+                log /dev/log local1 notice
+                maxconn 4096
+                daemon
 
-            defaults
-              log global
-              option tcplog
-              option httplog
-              option redispatch
-              retries 3
-              timeout connect 5s
-              timeout client  50s
-              timeout server  50s
+              defaults
+                log global
+                option tcplog
+                option httplog
+                option redispatch
+                retries 3
+                timeout connect 5s
+                timeout client  50s
+                timeout server  50s
 
-            frontend http_front
-              bind *:80
-              default_backend web_servers
+              frontend http_front
+                bind *:80
+                default_backend web_servers
 
-            backend web_servers
-              balance roundrobin
-              server-template webserver- 5 nginx.default.svc.cluster.local:80 check
+              backend web_servers
+                balance roundrobin
+                server-template webserver- 5 nginx.default.svc.cluster.local:80 check
 
-            frontend db_front
-              bind *:3306
-              default_backend db_servers
+              frontend db_front
+                bind *:3306
+                default_backend db_servers
 
-            backend db_servers
-              balance roundrobin
-              server-template dbserver- 5 mariadb.default.svc.cluster.local:3306 check
-      runcmd:
-        - systemctl restart haproxy
-        - systemctl enable haproxy
+              backend db_servers
+                balance roundrobin
+                server-template dbserver- 5 mariadb.default.svc.cluster.local:3306 check
+        runcmd:
+          - systemctl restart haproxy
+          - systemctl enable haproxy
