@@ -265,7 +265,8 @@
             - kubectl
             - kubelet
           runcmd:
-            - kubeadm init --pod-network-cidr=10.244.0.0/16 | tee /root/kube_join_command.sh
+            - kubeadm init --pod-network-cidr=10.244.0.0/16
+            - kubeadm token create --print-join-command > /root/kube_join_command.sh
             - mkdir -p /home/groep04_admin/.kube
             - cp -i /etc/kubernetes/admin.conf /home/groep04_admin/.kube/config
             - chown -R groep04_admin:groep04_admin /home/groep04_admin/.kube
