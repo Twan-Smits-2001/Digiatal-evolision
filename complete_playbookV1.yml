@@ -214,6 +214,29 @@
           - grafana-cli plugins install grafana-piechart-panel
           - grafana-cli plugins install prometheus-datasource
           - systemctl restart grafana-server
+          - curl -X POST http://admin:admin@localhost:3000/api/datasources \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "name": "Prometheus",
+                  "type": "prometheus",
+                  "url": "http://localhost:9090",
+                  "access": "proxy",
+                  "isDefault": true
+                }'
+          
+      write_files:
+        - path: /etc/prometheus/prometheus.yml
+          content: |
+            global:
+              scrape_interval: 15s
+
+            scrape_configs:
+              - job_name: 'kubernetes_nodes'
+                static_configs:
+                  - targets:
+                      - KubeMaster:9100
+                      - KubeWorker:9100
+
 
 - name: Create KubeMaster VM and Deploy Applications
   azure_rm_virtualmachine:
@@ -256,6 +279,9 @@
         - kubectl expose deployment mariadb --port=3306 --target-port=3306 --type=ClusterIP
 # hier moet nog root wachtwoord worden angepast
         - kubectl set env deployment/mariadb MYSQL_ROOT_PASSWORD=root
+        - apt-get install -y prometheus-node-exporter
+        - systemctl enable prometheus-node-exporter
+        - systemctl start prometheus-node-exporter
 
 
   - name: Fetch join command from KubeMaster
