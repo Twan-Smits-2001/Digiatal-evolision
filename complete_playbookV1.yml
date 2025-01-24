@@ -316,10 +316,10 @@
       runcmd:
         - "{{ kube_join_command.stdout }}"
 
-  - name: Install Flannel Network Plugin
-    shell: |
-      kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-    delegate_to: KubeMaster
+- name: Install Flannel Network Plugin
+  shell: |
+    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  delegate_to: KubeMaster
 
   - name: Create HAProxy VM
     azure_rm_virtualmachine:
