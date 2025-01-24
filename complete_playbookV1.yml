@@ -41,6 +41,13 @@
       name: KubeWorkerPublicIP
     register: kube_worker_ip
 
+- name: Create public IP for HAProxy
+  azure_rm_publicipaddress:
+    resource_group: A2S2_groep_04
+    allocation_method: Static
+    name: HAProxyPublicIP
+  register: haproxy_ip
+
   - name: Create Network Security Group for Grafana
     azure_rm_securitygroup:
       resource_group: A2S2_groep_04
@@ -89,6 +96,30 @@
           priority: 1001
           direction: Inbound
 
+- name: Create Network Security Group for HAProxy
+  azure_rm_securitygroup:
+    resource_group: A2S2_groep_04
+    name: HAProxyNetworkSecurityGroup
+    rules:
+      - name: SSH
+        protocol: Tcp
+        destination_port_range: 22
+        access: Allow
+        priority: 1001
+        direction: Inbound
+      - name: Load Balancer HTTP
+        protocol: Tcp
+        destination_port_range: 80
+        access: Allow
+        priority: 1002
+        direction: Inbound
+      - name: Load Balancer MySQL
+        protocol: Tcp
+        destination_port_range: 3306
+        access: Allow
+        priority: 1003
+        direction: Inbound
+
   - name: Create virtual network interface for Grafana
     azure_rm_networkinterface:
       resource_group: A2S2_groep_04
@@ -127,6 +158,19 @@
         - name: KubeWorkerNICConfig
           public_ip_address_name: KubeWorkerPublicIP
           primary: true
+
+- name: Create virtual network interface for HAProxy
+  azure_rm_networkinterface:
+    resource_group: A2S2_groep_04
+    name: HAProxyNIC
+    virtual_network: KubeVnet
+    subnet: KubeSubnet
+    security_group: HAProxyNetworkSecurityGroup
+    ip_forwarding: true
+    ip_configurations:
+      - name: HAProxyNICConfig
+        public_ip_address_name: HAProxyPublicIP
+        primary: true
 
   - name: Create Grafana VM
     azure_rm_virtualmachine:
@@ -256,3 +300,65 @@
       kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
     delegate_to: KubeMaster
 
+  - name: Create HAProxy VM
+    azure_rm_virtualmachine:
+      resource_group: A2S2_groep_04
+      name: HAProxy
+      vm_size: Standard_B2ms
+      admin_username: groep04_admin
+      ssh_password_enabled: false
+      ssh_public_keys:
+        - path: /home/groep04_admin/.ssh/authorized_keys
+          key_data: "ssh-rsa YOUR_PUBLIC_KEY"
+      network_interfaces: HAProxyNIC
+      managed_disk_type: Standard_LRS
+      image:
+        offer: 0001-com-ubuntu-server-jammy
+        publisher: Canonical
+        sku: 22_04-lts
+        version: latest
+      custom_data: |
+        #cloud-config
+        package_update: true
+        package_upgrade: true
+        packages:
+          - haproxy
+          - socat
+          - curl
+        write_files:
+          - path: /etc/haproxy/haproxy.cfg
+            content: |
+              global
+                log /dev/log local0
+                log /dev/log local1 notice
+                maxconn 4096
+                daemon
+
+              defaults
+                log global
+                option tcplog
+                option httplog
+                option redispatch
+                retries 3
+                timeout connect 5s
+                timeout client  50s
+                timeout server  50s
+
+              frontend http_front
+                bind *:80
+                default_backend web_servers
+
+              backend web_servers
+                balance roundrobin
+                server-template webserver- 5 nginx.default.svc.cluster.local:80 check
+
+              frontend db_front
+                bind *:3306
+                default_backend db_servers
+
+              backend db_servers
+                balance roundrobin
+                server-template dbserver- 5 mariadb.default.svc.cluster.local:3306 check
+        runcmd:
+          - systemctl restart haproxy
+          - systemctl enable haproxy
