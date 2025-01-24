@@ -182,8 +182,7 @@
         ssh_password_enabled: false
         ssh_public_keys:
           - path: /home/groep04_admin/.ssh/authorized_keys
-            key_data: "ssh-dss AAAAB3NzaC1kc3MAAACBAI1OApEiXh3lWAv+QuPu8kxYBJPl+FvIV/z1o2qoCvlwpYyRQ+783nNaTjECOxMiwqk7MtXZ13KkvD91I2M0RhNSoFGH50Hx2nBuxx1D3+1vtRVzH2pAezrX9dZxk7rfK71p3sD4uL8NN5/6yNg9P1jVXygWmOa5LmD1xKN+WNQpAAAAFQCC4TLEiw6/eSoLrQfGMNVreIw0RQAAAIB/5novtYmkKgNPUgSI6ukOlS0fLmd/92yExdCW8p1m2dB95Lep6dZ4rIKImK7aGoXc/5Q0qDeOcMQGNsM3UHRBiEk4lw9mmAHyLHK6a1RG6ljFwm90odX13txIAwweeMPy6l6O6TYGT+CXCFTz4TwSULbZlGt0qmX/xZSEwik5ZgAAAIBC3y/dGeTXgO244UuiY525O9U+ypX6K8OoHS44xM8gAwhiEgJBS03x798vP9+Y70+ZHNFz0hDKwXqWynau0cOVUWnMJdajaUzYXhZm3bBgrbUQBrIMfGHO1EtaLZtZrlkC7vlXc/gr/KNvIgzDcnUm7jKLyhIa7dRX6aVAa6KzZg== root@ansible"
-        network_interfaces: GrafanaNIC
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDOb9+ikspIbepZpcRxM82HisORC5ihx4/WA4TkbkW+INYQj+8nBd8h11tbTY0jdY8wrBp+EdK6BXtzLC2oaQNnuHZNcQYLt+OgXvwrLG9usXNnkWL/yeJtSHCSoLXfVaENJn/ZaSm0DfEdJ2atF1a0yIEy9L23dmoaelnRH6k3nRpVMOk/I6yKBacUS2pUbsZMmdawhPo6zoUtCHse01+IGOpWKDvc+qZJvQge5ymOR577dTKi1dM1/370K8ZofzUqtLOnvqdNkZGjx2/dwm6ZIwWzhU8I3+TP10O6DDUV7IsNotzJ23AU5498ifaH2l0Qdf6sv3R3aUu4S/yfRQ0p dennis@ansible"
         managed_disk_type: Standard_LRS
         image:
           offer: 0001-com-ubuntu-server-jammy
