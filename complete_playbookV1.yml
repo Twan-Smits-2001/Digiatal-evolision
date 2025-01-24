@@ -280,10 +280,10 @@
         - systemctl start prometheus-node-exporter
 
 
-  - name: Fetch join command from KubeMaster
-    shell: cat /root/kube_join_command.sh
-    register: kube_join_command
-    delegate_to: KubeMaster
+- name: Fetch join command from KubeMaster
+  shell: cat /root/kube_join_command.sh
+  register: kube_join_command
+  delegate_to: KubeMaster
 
   - name: Create KubeWorker VM and Join Kubernetes Cluster
     azure_rm_virtualmachine:
