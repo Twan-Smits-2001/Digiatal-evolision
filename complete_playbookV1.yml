@@ -245,7 +245,7 @@
         ssh_password_enabled: false
         ssh_public_keys:
           - path: /home/groep04_admin/.ssh/authorized_keys
-            key_data: "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBD/6Ny9CM88WjqN7AeQQy8EaZQcnxvyEEuN03qhQDfHu++HISwbU/XW7dG4RoTLblZqhy7gOHlI0C0Yi2k/Q3pU= root@ansible"
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDEe4+H2IPFZnmwe57hlv3fwLu4yn6ZiiWZhaijnbDXG7kMOo19IV2nhSZ1LAFOYU54XZS55oTGUH5C21tThG0lwwrXJl21Z9PtAENSBiscgcjXR6m8+U65Cis7L6Mrorll18VxMETiSjyhaFD+liL/PHgvcE3c9rrFdlfwh5niGJqYoW6ARhZu7xahy2Y1UO7zVRJ2ciG21lZtMU3DuSi601lbIq2t/am+NrKxRbVikBSVwWdVv0UGUKGdK0k92Xrhh2VTflgXOMUmEVeDeFySWBUKysBgg4nJE8VoCzwKKatKHOnlphPhcNCbY6MmynwZZnkzMWfV6JbeGHB7dqaLEc1Ds9Oy/ZiNJRxo31AkpjwT+shE5DUnfrpClCvQIa5VYOBWPRyr1s8aCvjkv2TKOHr3EDiOOILm2mY9STPs2dunpa67pU07U3Qi9WKVqxraG8lfuLtzd8TTi92Uihjta90jnYR/GvyuZNOQ6ZfDB4hHPXEV40GGfEbf+TUpUQNsfy1ZGDjqRjrTJoSr5ajT7tjvXGGGqn1QvRIpBVe+xUskVXzib30wDppObidQ2AJ6MbK41HMk5z7SP8mY7Ho/imXIsaJ12XJjbIXt7rkJcvQKFDceCTo+jgR70ts4YEDF518a3yM/rO3CWr9ILtOMXE9LfWxPhk77pRHCG6gX+w== dennis@ansible"
         network_interfaces: KubeMasterNIC
         managed_disk_type: Standard_LRS
         image:
@@ -295,7 +295,7 @@
         ssh_password_enabled: false
         ssh_public_keys:
           - path: /home/groep04_admin/.ssh/authorized_keys
-            key_data: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILblctV0E1azRBM3ORHWRz798XqSsdnccNnY7yuPmCNH root@ansible"
+            key_data: "AAAAB3NzaC1yc2EAAAADAQABAAACAQDDVlfBqfeKXlvtaUOHLyqav74Cf9/ihlXqyYAEkjJWjIVGzk5vuFQmNvyH43HBFJRRa9Ua262MMqBDz8pwGValZfYA6XrHmQAZSVuk9Xxeg1ABpS33p8uzcqzlCAN+k4zRds6161N2Jp1jKHLeK7ZbxuLNqxglf60uyI9MGhik7B9IX9TkdxKDnkVYE2ryt4Sapm2fzqZrDrgTrfcCU8hKmxIC/M19uk9eXTKS2kr1W+PMUysHyCl3kdOPOzJjWuGtA50T2Xp8ahms6ZFdWl4xggKB0SCT5E/AguzAV4eCr26zJMq7pzfkz1Au/VQ0D06qUcCoc0T+Me4EQsgvHGD1iTeG/GyLOqBAltshN/KtaCr8rVZsXz7uwI5Yfn+/9YP9+ReuXyVTfdYEi88rB//KiUftaeZj19URkH8GCwpE5gMJeUB6rJiYSjJuge88c2qC/zEV6THtdsLv13+25Mn+e1V9V22IQoIbq3arKFWPoaDYAZTvgdypJ6XXtNr+jkIe2GkzSDUTUjg8TUcglbrS8PYq3ctNEvKkxnlQuazqgCV6HrbHi/38z/6ds7FuPnBujJtc0bkX57vGPjm8J5fGPA8dXw+CCYoLCq/mk6fIkxYCFVE/6btzbMxmc0oJ56miKbKJGODJHmB1Y49WV1qQD/XKMHXck4xHncnOb/k5RQ== dennis@ansible"
         network_interfaces: KubeWorkerNIC
         managed_disk_type: Standard_LRS
         image:
