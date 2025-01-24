@@ -285,6 +285,8 @@
       shell: cat /root/kube_join_command.sh
       register: kube_join_command
       delegate_to: KubeMaster
+      become: true
+
 
     - name: Create KubeWorker VM and Join Kubernetes Cluster
       azure_rm_virtualmachine:
