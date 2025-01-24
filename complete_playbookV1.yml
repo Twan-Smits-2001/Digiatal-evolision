@@ -274,7 +274,6 @@
         - kubectl expose deployment nginx --port=80 --target-port=80 --type=ClusterIP
         - kubectl create deployment mariadb --image=mariadb
         - kubectl expose deployment mariadb --port=3306 --target-port=3306 --type=ClusterIP
-# hier moet nog root wachtwoord worden angepast
         - kubectl set env deployment/mariadb MYSQL_ROOT_PASSWORD=root
         - apt-get install -y prometheus-node-exporter
         - systemctl enable prometheus-node-exporter
