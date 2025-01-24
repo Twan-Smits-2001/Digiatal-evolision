@@ -182,7 +182,7 @@
       ssh_public_keys:
         - path: /home/groep04_admin/.ssh/authorized_keys
 # hier nog ssh key toevoegen
-          key_data: "ssh-rsa YOUR_PUBLIC_KEY"
+          key_data: "ssh-dss AAAAB3NzaC1kc3MAAACBAI1OApEiXh3lWAv+QuPu8kxYBJPl+FvIV/z1o2qoCvlwpYyRQ+783nNaTjECOxMiwqk7MtXZ13KkvD91I2M0RhNSoFGH50Hx2nBuxx1D3+1vtRVzH2pAezrX9dZxk7rfK71p3sD4uL8NN5/6yNg9P1jVXygWmOa5LmD1xKN+WNQpAAAAFQCC4TLEiw6/eSoLrQfGMNVreIw0RQAAAIB/5novtYmkKgNPUgSI6ukOlS0fLmd/92yExdCW8p1m2dB95Lep6dZ4rIKImK7aGoXc/5Q0qDeOcMQGNsM3UHRBiEk4lw9mmAHyLHK6a1RG6ljFwm90odX13txIAwweeMPy6l6O6TYGT+CXCFTz4TwSULbZlGt0qmX/xZSEwik5ZgAAAIBC3y/dGeTXgO244UuiY525O9U+ypX6K8OoHS44xM8gAwhiEgJBS03x798vP9+Y70+ZHNFz0hDKwXqWynau0cOVUWnMJdajaUzYXhZm3bBgrbUQBrIMfGHO1EtaLZtZrlkC7vlXc/gr/KNvIgzDcnUm7jKLyhIa7dRX6aVAa6KzZg== root@ansible"
       network_interfaces: GrafanaNIC
       managed_disk_type: Standard_LRS
       image:
@@ -248,7 +248,7 @@
     ssh_public_keys:
       - path: /home/groep04_admin/.ssh/authorized_keys
 # hier moet nog key worden angepast         SHA256:FlIqlgbmlaSTVK32cV2V6qFmcQCWlbL11fywzgVLW1w  (user)
-        key_data: "ssh-rsa YOUR_PUBLIC_KEY"
+        key_data: "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBD/6Ny9CM88WjqN7AeQQy8EaZQcnxvyEEuN03qhQDfHu++HISwbU/XW7dG4RoTLblZqhy7gOHlI0C0Yi2k/Q3pU= root@ansible"
     network_interfaces: KubeMasterNIC
     managed_disk_type: Standard_LRS
     image:
@@ -299,7 +299,7 @@
       ssh_public_keys:
         - path: /home/groep04_admin/.ssh/authorized_keys
 # hier moet nog key worden angepast
-          key_data: "ssh-rsa YOUR_PUBLIC_KEY"
+          key_data: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILblctV0E1azRBM3ORHWRz798XqSsdnccNnY7yuPmCNH root@ansible"
       network_interfaces: KubeWorkerNIC
       managed_disk_type: Standard_LRS
       image:
@@ -335,7 +335,7 @@
       ssh_password_enabled: false
       ssh_public_keys:
         - path: /home/groep04_admin/.ssh/authorized_keys
-          key_data: "ssh-rsa YOUR_PUBLIC_KEY"
+          key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCmBK7ZQJdBiDFcJCzcIAIX5azgt3U/qEKgiOKspcv3zLtodeoqFeCzVA6gLkbknAhNFq2czjospX/qJ1vg3ASt/ccX17dnr1E97KV2P0FoawOS5jFqW1Nn3F4uqVpKAsUsSgmLQuRLY72NnY6K8DHuCnYvTTnQMf5h8ZQNinM5+1cw9IXy8oha2ev+lFixYsKqh81gAmLyfhfcEEsCdH8Vv7fz6FWDoXoBAY/gFcJJP2Xm6q9cMuC6f7Rl1swiY+JYlAU6sLTn9Y+Sscmfy9/plLRJYSQRH2vKjgqTUgHOs5bqyydufeO8/eEjszLSrFAmfg/MasTOHVv+q+fWnTRQJqGB8CiH3Cu3eMcO0nmGA2IXWgXQEb8+mn4s/IQah0ufts7yCFONxcM67W2xIJ2Ij8Ce99s8ORhfLNV2uH0iFsGxMp7MsmGX8E99i3xNMzAVdkYM55/USCHFBdbzD2yIYcj2K0RdIgt/AxGbtmDgR7qv1f4C7UGueCfQCGfzUo8= root@ansible"
       network_interfaces: HAProxyNIC
       managed_disk_type: Standard_LRS
       image:
