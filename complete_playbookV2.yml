@@ -3,7 +3,6 @@
   connection: local
   vars_files:
     - secrets.yml
-    - azure_credentials.sh
   tasks:
 
     - name: Create resource group
