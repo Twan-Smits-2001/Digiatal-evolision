@@ -251,6 +251,21 @@
         msg: "Failed to obtain root access. Ensure 'become' is configured correctly."
       when: root_check.stdout != "root"
 
+    - name: Install kubectl using snap
+      shell: sudo snap install kubectl --classic
+      delegate_to: KubeMaster
+      become: true
+
+    - name: Verify kubectl installation
+      shell: which kubectl
+      delegate_to: KubeMaster
+      become: true
+      register: kubectl_path
+
+    - name: Debug kubectl path
+      debug:
+        msg: "kubectl is installed at {{ kubectl_path.stdout }}"
+
     - name: Create KubeMaster VM and Deploy Applications
       azure_rm_virtualmachine:
         resource_group: A2S2_groep_04
@@ -277,15 +292,7 @@
             - ca-certificates
             - curl
             - kubeadm
-            - kubectl
-            - kubelet
           runcmd:
-            - echo "Validating kubectl installation..."
-            - which kubectl || echo "kubectl not found in PATH"
-            - echo "Setting PATH to include /usr/local/bin..."
-            - export PATH=$PATH:/usr/local/bin
-            - echo "Re-validating kubectl installation..."
-            - which kubectl || echo "kubectl installation failed"
             - echo "Initializing Kubernetes master node..."
             - kubeadm init --pod-network-cidr=10.244.0.0/16 | tee /var/log/kubeadm-init.log || echo "Failed to initialize Kubernetes"
             - echo "Creating kube config for the admin user..."
@@ -308,13 +315,10 @@
 
     - name: Install Flannel Network Plugin
       shell: |
-        export PATH=$PATH:/usr/local/bin
+        export PATH=$PATH:/snap/bin
         kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
       delegate_to: KubeMaster
       become: true
-      environment:
-        PATH: "/usr/local/bin:/usr/bin:/bin"
-
 
 
     - name: Create HAProxy VM
