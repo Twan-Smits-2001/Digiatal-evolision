@@ -313,6 +313,26 @@
             - systemctl enable prometheus-node-exporter || echo "Failed to enable Node Exporter"
             - systemctl start prometheus-node-exporter || echo "Failed to start Node Exporter"
 
+    - name: Initialize Kubernetes Cluster
+      shell: |
+        kubeadm init --pod-network-cidr=10.244.0.0/16 || echo "Cluster already initialized"
+      delegate_to: KubeMaster
+      become: true
+
+    - name: Configure kubeconfig for kubectl
+      shell: |
+        mkdir -p $HOME/.kube
+        cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+        chown $(id -u):$(id -g) $HOME/.kube/config
+      delegate_to: KubeMaster
+      become: true
+
+    - name: Verify kubectl is configured
+      shell: kubectl get nodes
+      delegate_to: KubeMaster
+      become: true
+
+
     - name: Install Flannel Network Plugin
       shell: |
         export PATH=$PATH:/snap/bin
