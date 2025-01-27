@@ -1,6 +1,8 @@
 - name: Create Azure Resources for Kubernetes Cluster and Grafana Monitoring
   hosts: localhost
   connection: local
+  vars_files:
+    - secrets.yml
   tasks:
 
     - name: Create resource group
