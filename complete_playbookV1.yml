@@ -234,7 +234,20 @@
                     "isDefault": true
                   }'
 
+    - name: Verify root access
+      shell: whoami
+      register: root_check
+      delegate_to: KubeMaster
+      become: true
 
+    - name: Debug root access
+      debug:
+        msg: "Current user: {{ root_check.stdout }}"
+
+    - name: Fail if not root
+      fail:
+        msg: "Failed to obtain root access. Ensure 'become' is configured correctly."
+      when: root_check.stdout != "root"
 
     - name: Create KubeMaster VM and Deploy Applications
       azure_rm_virtualmachine:
@@ -266,7 +279,7 @@
             - kubelet
           runcmd:
             - echo "Initializing Kubernetes master node..."
-            - kubeadm init --pod-network-cidr=10.244.0.0/16 | tee /var/log/kubeadm-init.log || echo "Failed to initialize Kubernetes"
+            - sudo kubeadm init --pod-network-cidr=10.244.0.0/16 | tee /var/log/kubeadm-init.log || echo "Failed to initialize Kubernetes"
             - echo "Creating kube config for the admin user..."
             - mkdir -p /home/groep04_admin/.kube
             - cp -i /etc/kubernetes/admin.conf /home/groep04_admin/.kube/config
@@ -284,6 +297,7 @@
             - apt-get install -y prometheus-node-exporter || echo "Failed to install Node Exporter"
             - systemctl enable prometheus-node-exporter || echo "Failed to enable Node Exporter"
             - systemctl start prometheus-node-exporter || echo "Failed to start Node Exporter"
+
 
     - name: Create KubeWorker VM and Join Kubernetes Cluster
       azure_rm_virtualmachine:
