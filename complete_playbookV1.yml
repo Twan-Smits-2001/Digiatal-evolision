@@ -316,9 +316,10 @@
     - name: Install Flannel Network Plugin
       shell: |
         export PATH=$PATH:/snap/bin
-        kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+        kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --validate=false
       delegate_to: KubeMaster
       become: true
+
 
 
     - name: Create HAProxy VM
