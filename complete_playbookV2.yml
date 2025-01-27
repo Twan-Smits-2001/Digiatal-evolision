@@ -1,0 +1,192 @@
+- name: Create Azure Resources for Docker Cluster and Monitoring
+  hosts: localhost
+  connection: local
+  vars_files:
+    - secrets.yml
+  tasks:
+
+    - name: Create resource group
+      azure_rm_resourcegroup:
+        name: DockerResources
+        location: westeurope
+
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: DockerResources
+        name: DockerVnet
+        address_prefixes: "10.0.0.0/16"
+
+    - name: Add subnet
+      azure_rm_subnet:
+        resource_group: DockerResources
+        name: DockerSubnet
+        address_prefix: "10.0.1.0/24"
+        virtual_network: DockerVnet
+
+    - name: Create public IP for Grafana
+      azure_rm_publicipaddress:
+        resource_group: DockerResources
+        allocation_method: Static
+        name: GrafanaPublicIP
+      register: grafana_ip
+
+    - name: Create public IP for DockerMaster
+      azure_rm_publicipaddress:
+        resource_group: DockerResources
+        allocation_method: Static
+        name: DockerMasterPublicIP
+      register: docker_master_ip
+
+    - name: Create public IP for DockerWorker
+      azure_rm_publicipaddress:
+        resource_group: DockerResources
+        allocation_method: Static
+        name: DockerWorkerPublicIP
+      register: docker_worker_ip
+
+    - name: Create public IP for HAProxy
+      azure_rm_publicipaddress:
+        resource_group: DockerResources
+        allocation_method: Static
+        name: HAProxyPublicIP
+      register: haproxy_ip
+
+    - name: Create Network Security Group for Grafana
+      azure_rm_securitygroup:
+        resource_group: DockerResources
+        name: GrafanaNSG
+        rules:
+          - name: SSH
+            protocol: Tcp
+            destination_port_range: 22
+            access: Allow
+            priority: 1001
+            direction: Inbound
+          - name: Grafana
+            protocol: Tcp
+            destination_port_range: 3000
+            access: Allow
+            priority: 1002
+            direction: Inbound
+
+    - name: Create Network Security Group for DockerMaster
+      azure_rm_securitygroup:
+        resource_group: DockerResources
+        name: DockerMasterNSG
+        rules:
+          - name: SSH
+            protocol: Tcp
+            destination_port_range: 22
+            access: Allow
+            priority: 1001
+            direction: Inbound
+
+    - name: Create Network Security Group for DockerWorker
+      azure_rm_securitygroup:
+        resource_group: DockerResources
+        name: DockerWorkerNSG
+        rules:
+          - name: SSH
+            protocol: Tcp
+            destination_port_range: 22
+            access: Allow
+            priority: 1001
+            direction: Inbound
+
+    - name: Create Network Security Group for HAProxy
+      azure_rm_securitygroup:
+        resource_group: DockerResources
+        name: HAProxyNSG
+        rules:
+          - name: SSH
+            protocol: Tcp
+            destination_port_range: 22
+            access: Allow
+            priority: 1001
+            direction: Inbound
+          - name: Load_Balancer_HTTP
+            protocol: Tcp
+            destination_port_range: 80
+            access: Allow
+            priority: 1002
+            direction: Inbound
+          - name: Load_Balancer_MySQL
+            protocol: Tcp
+            destination_port_range: 3306
+            access: Allow
+            priority: 1003
+            direction: Inbound
+
+    - name: Create virtual network interfaces
+      azure_rm_networkinterface:
+        resource_group: DockerResources
+        name: "{{ item.name }}"
+        virtual_network: DockerVnet
+        subnet: DockerSubnet
+        security_group: "{{ item.security_group }}"
+        ip_forwarding: true
+        ip_configurations:
+          - name: "{{ item.name }}Config"
+            public_ip_address_name: "{{ item.public_ip }}"
+            primary: true
+      loop:
+        - { name: GrafanaNIC, security_group: GrafanaNSG, public_ip: GrafanaPublicIP }
+        - { name: DockerMasterNIC, security_group: DockerMasterNSG, public_ip: DockerMasterPublicIP }
+        - { name: DockerWorkerNIC, security_group: DockerWorkerNSG, public_ip: DockerWorkerPublicIP }
+        - { name: HAProxyNIC, security_group: HAProxyNSG, public_ip: HAProxyPublicIP }
+
+    - name: Deploy virtual machines
+      azure_rm_virtualmachine:
+        resource_group: DockerResources
+        name: "{{ item.name }}"
+        vm_size: Standard_B2ms
+        admin_username: adminuser
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/adminuser/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAA... your public key ..."
+        network_interfaces: "{{ item.nic }}"
+        managed_disk_type: Standard_LRS
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts
+          version: latest
+        custom_data: "{{ item.custom_data }}"
+      loop:
+        - name: Grafana
+          nic: GrafanaNIC
+          custom_data: |
+            #cloud-config
+            runcmd:
+              - apt-get update && apt-get install -y grafana prometheus
+              - systemctl enable --now grafana-server
+        - name: DockerMaster
+          nic: DockerMasterNIC
+          custom_data: |
+            #cloud-config
+            runcmd:
+              - apt-get update && apt-get install -y docker.io
+              - systemctl enable --now docker
+              - docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root mariadb
+              - docker run -d --name nginx -p 80:80 nginx
+        - name: DockerWorker
+          nic: DockerWorkerNIC
+          custom_data: |
+            #cloud-config
+            runcmd:
+              - apt-get update && apt-get install -y docker.io
+              - systemctl enable --now docker
+        - name: HAProxy
+          nic: HAProxyNIC
+          custom_data: |
+            #cloud-config
+            runcmd:
+              - apt-get update && apt-get install -y haproxy
+              - echo "frontend http_front
+                bind *:80
+                default_backend web_servers
+              backend web_servers
+                balance roundrobin
+                server docker_master {{ docker_master_ip.public_ip }}:80 check" > /etc/haproxy/haproxy.cfg
+              - systemctl enable --now haproxy
