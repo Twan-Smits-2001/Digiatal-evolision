@@ -3,7 +3,7 @@
   connection: local
   vars_files:
     - secrets.yml
-    - source /etc/profile.d/azure_credentials.sh
+    - azure_credentials.sh
   tasks:
 
     - name: Create resource group
