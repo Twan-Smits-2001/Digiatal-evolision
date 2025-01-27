@@ -278,6 +278,12 @@
             - kubectl
             - kubelet
           runcmd:
+            - echo "Validating kubectl installation..."
+            - which kubectl || echo "kubectl not found in PATH"
+            - echo "Setting PATH to include /usr/local/bin..."
+            - export PATH=$PATH:/usr/local/bin
+            - echo "Re-validating kubectl installation..."
+            - which kubectl || echo "kubectl installation failed"
             - echo "Initializing Kubernetes master node..."
             - sudo kubeadm init --pod-network-cidr=10.244.0.0/16 | tee /var/log/kubeadm-init.log || echo "Failed to initialize Kubernetes"
             - echo "Creating kube config for the admin user..."
@@ -297,6 +303,7 @@
             - apt-get install -y prometheus-node-exporter || echo "Failed to install Node Exporter"
             - systemctl enable prometheus-node-exporter || echo "Failed to enable Node Exporter"
             - systemctl start prometheus-node-exporter || echo "Failed to start Node Exporter"
+
 
 
     - name: Create KubeWorker VM and Join Kubernetes Cluster
