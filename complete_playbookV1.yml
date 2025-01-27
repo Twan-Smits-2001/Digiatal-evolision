@@ -236,84 +236,84 @@
                     "isDefault": true
                   }'
 
-- name: Verify root access
-  shell: whoami
-  register: root_check
-  delegate_to: KubeMaster
-  become: true
+    - name: Verify root access
+      shell: whoami
+      register: root_check
+      delegate_to: KubeMaster
+      become: true
 
-- name: Debug root access
-  debug:
-    msg: "Current user: {{ root_check.stdout }}"
+    - name: Debug root access
+      debug:
+        msg: "Current user: {{ root_check.stdout }}"
 
-- name: Fail if not root
-  fail:
-    msg: "Failed to obtain root access. Ensure 'become' is configured correctly."
-  when: root_check.stdout != "root"
+    - name: Fail if not root
+      fail:
+        msg: "Failed to obtain root access. Ensure 'become' is configured correctly."
+      when: root_check.stdout != "root"
 
-- name: Create KubeMaster VM and Deploy Applications
-  azure_rm_virtualmachine:
-    resource_group: A2S2_groep_04
-    name: KubeMaster
-    vm_size: Standard_B2ms
-    admin_username: groep04_admin
-    ssh_password_enabled: false
-    ssh_public_keys:
-      - path: /home/groep04_admin/.ssh/authorized_keys
-        key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDEe4+H2IPFZnmwe57hlv3fwLu4yn6ZiiWZhaijnbDXG7kMOo19IV2nhSZ1LAFOYU54XZS55oTGUH5C21tThG0lwwrXJl21Z9PtAENSBiscgcjXR6m8+U65Cis7L6Mrorll18VxMETiSjyhaFD+liL/PHgvcE3c9rrFdlfwh5niGJqYoW6ARhZu7xahy2Y1UO7zVRJ2ciG21lZtMU3DuSi601lbIq2t/am+NrKxRbVikBSVwWdVv0UGUKGdK0k92Xrhh2VTflgXOMUmEVeDeFySWBUKysBgg4nJE8VoCzwKKatKHOnlphPhcNCbY6MmynwZZnkzMWfV6JbeGHB7dqaLEc1Ds9Oy/ZiNJRxo31AkpjwT+shE5DUnfrpClCvQIa5VYOBWPRyr1s8aCvjkv2TKOHr3EDiOOILm2mY9STPs2dunpa67pU07U3Qi9WKVqxraG8lfuLtzd8TTi92Uihjta90jnYR/GvyuZNOQ6ZfDB4hHPXEV40GGfEbf+TUpUQNsfy1ZGDjqRjrTJoSr5ajT7tjvXGGGqn1QvRIpBVe+xUskVXzib30wDppObidQ2AJ6MbK41HMk5z7SP8mY7Ho/imXIsaJ12XJjbIXt7rkJcvQKFDceCTo+jgR70ts4YEDF518a3yM/rO3CWr9ILtOMXE9LfWxPhk77pRHCG6gX+w== dennis@ansible"
-    network_interfaces: KubeMasterNIC
-    managed_disk_type: Standard_LRS
-    image:
-      offer: 0001-com-ubuntu-server-jammy
-      publisher: Canonical
-      sku: 22_04-lts
-      version: latest
-    custom_data: |
-      #cloud-config
-      package_update: true
-      package_upgrade: true
-      packages:
-        - apt-transport-https
-        - ca-certificates
-        - curl
-        - kubeadm
-        - kubectl
-        - kubelet
-      runcmd:
-        - echo "Validating kubectl installation..."
-        - which kubectl || echo "kubectl not found in PATH"
-        - echo "Setting PATH to include /usr/local/bin..."
-        - export PATH=$PATH:/usr/local/bin
-        - echo "Re-validating kubectl installation..."
-        - which kubectl || echo "kubectl installation failed"
-        - echo "Initializing Kubernetes master node..."
-        - kubeadm init --pod-network-cidr=10.244.0.0/16 | tee /var/log/kubeadm-init.log || echo "Failed to initialize Kubernetes"
-        - echo "Creating kube config for the admin user..."
-        - mkdir -p /home/groep04_admin/.kube
-        - cp -i /etc/kubernetes/admin.conf /home/groep04_admin/.kube/config
-        - chown -R groep04_admin:groep04_admin /home/groep04_admin/.kube
-        - echo "Applying Flannel CNI plugin..."
-        - kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml || echo "Failed to apply Flannel"
-        - echo "Deploying nginx..."
-        - kubectl create deployment nginx --image=nginx || echo "Failed to deploy nginx"
-        - kubectl expose deployment nginx --port=80 --target-port=80 --type=ClusterIP || echo "Failed to expose nginx"
-        - echo "Deploying MariaDB..."
-        - kubectl create deployment mariadb --image=mariadb || echo "Failed to deploy MariaDB"
-        - kubectl expose deployment mariadb --port=3306 --target-port=3306 --type=ClusterIP || echo "Failed to expose MariaDB"
-        - kubectl set env deployment/mariadb MYSQL_ROOT_PASSWORD=root || echo "Failed to set MariaDB environment variables"
-        - echo "Installing and starting Prometheus Node Exporter..."
-        - apt-get install -y prometheus-node-exporter || echo "Failed to install Node Exporter"
-        - systemctl enable prometheus-node-exporter || echo "Failed to enable Node Exporter"
-        - systemctl start prometheus-node-exporter || echo "Failed to start Node Exporter"
+    - name: Create KubeMaster VM and Deploy Applications
+      azure_rm_virtualmachine:
+        resource_group: A2S2_groep_04
+        name: KubeMaster
+        vm_size: Standard_B2ms
+        admin_username: groep04_admin
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/groep04_admin/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDEe4+H2IPFZnmwe57hlv3fwLu4yn6ZiiWZhaijnbDXG7kMOo19IV2nhSZ1LAFOYU54XZS55oTGUH5C21tThG0lwwrXJl21Z9PtAENSBiscgcjXR6m8+U65Cis7L6Mrorll18VxMETiSjyhaFD+liL/PHgvcE3c9rrFdlfwh5niGJqYoW6ARhZu7xahy2Y1UO7zVRJ2ciG21lZtMU3DuSi601lbIq2t/am+NrKxRbVikBSVwWdVv0UGUKGdK0k92Xrhh2VTflgXOMUmEVeDeFySWBUKysBgg4nJE8VoCzwKKatKHOnlphPhcNCbY6MmynwZZnkzMWfV6JbeGHB7dqaLEc1Ds9Oy/ZiNJRxo31AkpjwT+shE5DUnfrpClCvQIa5VYOBWPRyr1s8aCvjkv2TKOHr3EDiOOILm2mY9STPs2dunpa67pU07U3Qi9WKVqxraG8lfuLtzd8TTi92Uihjta90jnYR/GvyuZNOQ6ZfDB4hHPXEV40GGfEbf+TUpUQNsfy1ZGDjqRjrTJoSr5ajT7tjvXGGGqn1QvRIpBVe+xUskVXzib30wDppObidQ2AJ6MbK41HMk5z7SP8mY7Ho/imXIsaJ12XJjbIXt7rkJcvQKFDceCTo+jgR70ts4YEDF518a3yM/rO3CWr9ILtOMXE9LfWxPhk77pRHCG6gX+w== dennis@ansible"
+        network_interfaces: KubeMasterNIC
+        managed_disk_type: Standard_LRS
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts
+          version: latest
+        custom_data: |
+          #cloud-config
+          package_update: true
+          package_upgrade: true
+          packages:
+            - apt-transport-https
+            - ca-certificates
+            - curl
+            - kubeadm
+            - kubectl
+            - kubelet
+          runcmd:
+            - echo "Validating kubectl installation..."
+            - which kubectl || echo "kubectl not found in PATH"
+            - echo "Setting PATH to include /usr/local/bin..."
+            - export PATH=$PATH:/usr/local/bin
+            - echo "Re-validating kubectl installation..."
+            - which kubectl || echo "kubectl installation failed"
+            - echo "Initializing Kubernetes master node..."
+            - kubeadm init --pod-network-cidr=10.244.0.0/16 | tee /var/log/kubeadm-init.log || echo "Failed to initialize Kubernetes"
+            - echo "Creating kube config for the admin user..."
+            - mkdir -p /home/groep04_admin/.kube
+            - cp -i /etc/kubernetes/admin.conf /home/groep04_admin/.kube/config
+            - chown -R groep04_admin:groep04_admin /home/groep04_admin/.kube
+            - echo "Applying Flannel CNI plugin..."
+            - kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml || echo "Failed to apply Flannel"
+            - echo "Deploying nginx..."
+            - kubectl create deployment nginx --image=nginx || echo "Failed to deploy nginx"
+            - kubectl expose deployment nginx --port=80 --target-port=80 --type=ClusterIP || echo "Failed to expose nginx"
+            - echo "Deploying MariaDB..."
+            - kubectl create deployment mariadb --image=mariadb || echo "Failed to deploy MariaDB"
+            - kubectl expose deployment mariadb --port=3306 --target-port=3306 --type=ClusterIP || echo "Failed to expose MariaDB"
+            - kubectl set env deployment/mariadb MYSQL_ROOT_PASSWORD=root || echo "Failed to set MariaDB environment variables"
+            - echo "Installing and starting Prometheus Node Exporter..."
+            - apt-get install -y prometheus-node-exporter || echo "Failed to install Node Exporter"
+            - systemctl enable prometheus-node-exporter || echo "Failed to enable Node Exporter"
+            - systemctl start prometheus-node-exporter || echo "Failed to start Node Exporter"
 
-- name: Install Flannel Network Plugin
-  shell: |
-    export PATH=$PATH:/usr/local/bin
-    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-  delegate_to: KubeMaster
-  become: true
-  environment:
-    PATH: "/usr/local/bin:/usr/bin:/bin"
+    - name: Install Flannel Network Plugin
+      shell: |
+        export PATH=$PATH:/usr/local/bin
+        kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+      delegate_to: KubeMaster
+      become: true
+      environment:
+        PATH: "/usr/local/bin:/usr/bin:/bin"
 
 
 
