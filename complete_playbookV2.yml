@@ -69,6 +69,7 @@
             priority: 1002
             direction: Inbound
 
+    # Security Groups for Docker Machines
     - name: Create Network Security Group for DockerMaster
       azure_rm_securitygroup:
         resource_group: A2S2_groep_04
@@ -79,6 +80,12 @@
             destination_port_range: 22
             access: Allow
             priority: 1001
+            direction: Inbound
+          - name: Docker-API
+            protocol: Tcp
+            destination_port_range: 2376
+            access: Allow
+            priority: 1002
             direction: Inbound
 
     - name: Create Network Security Group for DockerWorker
@@ -130,30 +137,30 @@
             public_ip_address_name: GrafanaPublicIP
             primary: true
 
-    - name: Create virtual network interface for KubeMaster
+    - name: Create virtual network interface for DockerMaster
       azure_rm_networkinterface:
         resource_group: A2S2_groep_04
-        name: KubeMasterNIC
+        name: DockerMasterNIC
         virtual_network: DockerVnet
         subnet: DockerSubnet
-        security_group: KubeMasterNSG
+        security_group: DockerMasterNSG
         ip_forwarding: true
         ip_configurations:
-          - name: KubeMasterNICConfig
-            public_ip_address_name: KubeMasterPublicIP
+          - name: DockerMasterNICConfig
+            public_ip_address_name: DockerMasterPublicIP
             primary: true
 
-    - name: Create virtual network interface for KubeWorker
+    - name: Create virtual network interface for DockerWorker
       azure_rm_networkinterface:
         resource_group: A2S2_groep_04
-        name: KubeWorkerNIC
+        name: DockerWorkerNIC
         virtual_network: DockerVnet
         subnet: DockerSubnet
-        security_group: KubeWorkerNSG
+        security_group: DockerWorkerNSG
         ip_forwarding: true
         ip_configurations:
-          - name: KubeWorkerNICConfig
-            public_ip_address_name: KubeWorkerPublicIP
+          - name: DockerWorkerNICConfig
+            public_ip_address_name: DockerWorkerPublicIP
             primary: true
 
     - name: Create virtual network interface for HAProxy
@@ -169,58 +176,202 @@
             public_ip_address_name: HAProxyPublicIP
             primary: true
 
-    - name: Deploy virtual machines
+     - name: Create Grafana VM
       azure_rm_virtualmachine:
         resource_group: A2S2_groep_04
-        name: "{{ item.name }}"
+        name: Grafana
         vm_size: Standard_B2ms
-        admin_username: adminuser
+        admin_username: groep04_admin
         ssh_password_enabled: false
         ssh_public_keys:
-          - path: /home/adminuser/.ssh/authorized_keys
-            key_data: "ssh-rsa AAAA... your public key ..."
-        network_interfaces: "{{ item.nic }}"
+          - path: /home/groep04_admin/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDOb9+ikspIbepZpcRxM82HisORC5ihx4/WA4TkbkW+INYQj+8nBd8h11tbTY0jdY8wrBp+EdK6BXtzLC2oaQNnuHZNcQYLt+OgXvwrLG9usXNnkWL/yeJtSHCSoLXfVaENJn/ZaSm0DfEdJ2atF1a0yIEy9L23dmoaelnRH6k3nRpVMOk/I6yKBacUS2pUbsZMmdawhPo6zoUtCHse01+IGOpWKDvc+qZJvQge5ymOR577dTKi1dM1/370K8ZofzUqtLOnvqdNkZGjx2/dwm6ZIwWzhU8I3+TP10O6DDUV7IsNotzJ23AU5498ifaH2l0Qdf6sv3R3aUu4S/yfRQ0p dennis@ansible"
         managed_disk_type: Standard_LRS
         image:
           offer: 0001-com-ubuntu-server-jammy
           publisher: Canonical
           sku: 22_04-lts
           version: latest
-        custom_data: "{{ item.custom_data }}"
-      loop:
-        - name: Grafana
-          nic: GrafanaNIC
-          custom_data: |
-            #cloud-config
-            runcmd:
-              - apt-get update && apt-get install -y grafana prometheus
-              - systemctl enable --now grafana-server
-        - name: DockerMaster
-          nic: DockerMasterNIC
-          custom_data: |
-            #cloud-config
-            runcmd:
-              - apt-get update && apt-get install -y docker.io
-              - systemctl enable --now docker
-              - docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root mariadb
-              - docker run -d --name nginx -p 80:80 nginx
-        - name: DockerWorker
-          nic: DockerWorkerNIC
-          custom_data: |
-            #cloud-config
-            runcmd:
-              - apt-get update && apt-get install -y docker.io
-              - systemctl enable --now docker
-        - name: HAProxy
-          nic: HAProxyNIC
-          custom_data: |
-            #cloud-config
-            runcmd:
-              - apt-get update && apt-get install -y haproxy
-              - echo "frontend http_front
-                bind *:80
-                default_backend web_servers
-              backend web_servers
-                balance roundrobin
-                server docker_master {{ docker_master_ip.public_ip }}:80 check" > /etc/haproxy/haproxy.cfg
-              - systemctl enable --now haproxy
+        custom_data: |
+          #cloud-config
+          package_update: true
+          package_upgrade: true
+          packages:
+            - apt-transport-https
+            - software-properties-common
+            - curl
+            - wget
+          write_files:
+            - path: /etc/prometheus/prometheus.yml
+              content: |
+                global:
+                  scrape_interval: 15s
+
+                scrape_configs:
+                  - job_name: 'kubernetes_nodes'
+                    static_configs:
+                      - targets:
+                          - KubeMaster:9100
+                          - KubeWorker:9100
+          runcmd:
+            - curl -fsSL https://packages.grafana.com/gpg.key | apt-key add -
+            - add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
+            - apt-get update && apt-get install -y grafana
+            - systemctl start grafana-server
+            - systemctl enable grafana-server
+            - curl -LO https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+            - tar -xzf prometheus-2.45.0.linux-amd64.tar.gz -C /usr/local/bin
+            - mv /usr/local/bin/prometheus-2.45.0.linux-amd64 /usr/local/bin/prometheus
+            - systemctl start prometheus
+            - systemctl enable prometheus
+            - grafana-cli plugins install grafana-piechart-panel
+            - grafana-cli plugins install prometheus-datasource
+            - systemctl restart grafana-server
+            - curl -X POST http://admin:admin@localhost:3000/api/datasources \
+              -H "Content-Type: application/json" \
+              -d '{
+                    "name": "Prometheus",
+                    "type": "prometheus",
+                    "url": "http://localhost:9090",
+                    "access": "proxy",
+                    "isDefault": true
+                  }'
+
+    - name: Create HAProxy VM
+      azure_rm_virtualmachine:
+        resource_group: A2S2_groep_04
+        name: HAProxy
+        vm_size: Standard_B2ms
+        admin_username: groep04_admin
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/groep04_admin/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCmBK7ZQJdBiDFcJCzcIAIX5azgt3U/qEKgiOKspcv3zLtodeoqFeCzVA6gLkbknAhNFq2czjospX/qJ1vg3ASt/ccX17dnr1E97KV2P0FoawOS5jFqW1Nn3F4uqVpKAsUsSgmLQuRLY72NnY6K8DHuCnYvTTnQMf5h8ZQNinM5+1cw9IXy8oha2ev+lFixYsKqh81gAmLyfhfcEEsCdH8Vv7fz6FWDoXoBAY/gFcJJP2Xm6q9cMuC6f7Rl1swiY+JYlAU6sLTn9Y+Sscmfy9/plLRJYSQRH2vKjgqTUgHOs5bqyydufeO8/eEjszLSrFAmfg/MasTOHVv+q+fWnTRQJqGB8CiH3Cu3eMcO0nmGA2IXWgXQEb8+mn4s/IQah0ufts7yCFONxcM67W2xIJ2Ij8Ce99s8ORhfLNV2uH0iFsGxMp7MsmGX8E99i3xNMzAVdkYM55/USCHFBdbzD2yIYcj2K0RdIgt/AxGbtmDgR7qv1f4C7UGueCfQCGfzUo8= root@ansible"
+        network_interfaces: HAProxyNIC
+        managed_disk_type: Standard_LRS
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts
+          version: latest
+        custom_data: |
+          #cloud-config
+          package_update: true
+          package_upgrade: true
+          packages:
+            - haproxy
+            - socat
+            - curl
+          write_files:
+            - path: /etc/haproxy/haproxy.cfg
+              content: |
+                global
+                  log /dev/log local0
+                  log /dev/log local1 notice
+                  maxconn 4096
+                  daemon
+
+                defaults
+                  log global
+                  option tcplog
+                  option httplog
+                  option redispatch
+                  retries 3
+                  timeout connect 5s
+                  timeout client  50s
+                  timeout server  50s
+
+                frontend http_front
+                  bind *:80
+                  default_backend web_servers
+
+                backend web_servers
+                  balance roundrobin
+                  server-template webserver- 5 nginx.default.svc.cluster.local:80 check
+
+                frontend db_front
+                  bind *:3306
+                  default_backend db_servers
+
+                backend db_servers
+                  balance roundrobin
+                  server-template dbserver- 5 mariadb.default.svc.cluster.local:3306 check
+          runcmd:
+            - systemctl restart haproxy
+            - systemctl enable haproxy
+
+    # Create DockerMaster VM
+    - name: Create DockerMaster VM
+      azure_rm_virtualmachine:
+        resource_group: A2S2_groep_04
+        name: DockerMaster
+        vm_size: Standard_B2ms
+        admin_username: groep04_admin
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/groep04_admin/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3...dennis@ansible"
+        network_interfaces: DockerMasterNIC
+        managed_disk_type: Standard_LRS
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts
+          version: latest
+        custom_data: |
+          #cloud-config
+          package_update: true
+          package_upgrade: true
+          packages:
+            - docker.io
+            - docker-compose
+          runcmd:
+            - systemctl enable docker
+            - systemctl start docker
+            - usermod -aG docker groep04_admin
+            - docker swarm init --advertise-addr $(hostname -I | awk '{print $1}')
+            - docker network create --driver overlay my-overlay-network
+
+    # Create DockerWorker VM
+    - name: Create DockerWorker VM
+      azure_rm_virtualmachine:
+        resource_group: A2S2_groep_04
+        name: DockerWorker
+        vm_size: Standard_B2ms
+        admin_username: groep04_admin
+        ssh_password_enabled: false
+        ssh_public_keys:
+          - path: /home/groep04_admin/.ssh/authorized_keys
+            key_data: "ssh-rsa AAAAB3...dennis@ansible"
+        network_interfaces: DockerWorkerNIC
+        managed_disk_type: Standard_LRS
+        image:
+          offer: 0001-com-ubuntu-server-jammy
+          publisher: Canonical
+          sku: 22_04-lts
+          version: latest
+        custom_data: |
+          #cloud-config
+          package_update: true
+          package_upgrade: true
+          packages:
+            - docker.io
+            - docker-compose
+          runcmd:
+            - systemctl enable docker
+            - systemctl start docker
+            - usermod -aG docker groep04_admin
+            - apt-get install -y python3-pip
+            - pip3 install docker-compose
+            - echo "Docker Worker node is ready."
+
+    # Fetch Swarm Join Command
+    - name: Get Swarm join token
+      shell: docker swarm join-token worker -q
+      register: swarm_worker_token
+      delegate_to: DockerMaster
+
+    # Join DockerWorker to Swarm
+    - name: Join DockerWorker to Swarm
+      shell: docker swarm join --token {{ swarm_worker_token.stdout }} $(hostname -I | awk '{print $1}'):2377
+      delegate_to: DockerWorker
