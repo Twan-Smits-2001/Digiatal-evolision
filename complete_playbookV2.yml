@@ -176,7 +176,7 @@
             public_ip_address_name: HAProxyPublicIP
             primary: true
 
-     - name: Create Grafana VM
+    - name: Create Grafana VM
       azure_rm_virtualmachine:
         resource_group: A2S2_groep_04
         name: Grafana
