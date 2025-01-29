@@ -310,7 +310,7 @@
         ssh_password_enabled: false
         ssh_public_keys:
           - path: /home/groep04_admin/.ssh/authorized_keys
-            key_data: "ssh-rsa AAAAB3...dennis@ansible"
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDEe4+H2IPFZnmwe57hlv3fwLu4yn6ZiiWZhaijnbDXG7kMOo19IV2nhSZ1LAFOYU54XZS55oTGUH5C21tThG0lwwrXJl21Z9PtAENSBiscgcjXR6m8+U65Cis7L6Mrorll18VxMETiSjyhaFD+liL/PHgvcE3c9rrFdlfwh5niGJqYoW6ARhZu7xahy2Y1UO7zVRJ2ciG21lZtMU3DuSi601lbIq2t/am+NrKxRbVikBSVwWdVv0UGUKGdK0k92Xrhh2VTflgXOMUmEVeDeFySWBUKysBgg4nJE8VoCzwKKatKHOnlphPhcNCbY6MmynwZZnkzMWfV6JbeGHB7dqaLEc1Ds9Oy/ZiNJRxo31AkpjwT+shE5DUnfrpClCvQIa5VYOBWPRyr1s8aCvjkv2TKOHr3EDiOOILm2mY9STPs2dunpa67pU07U3Qi9WKVqxraG8lfuLtzd8TTi92Uihjta90jnYR/GvyuZNOQ6ZfDB4hHPXEV40GGfEbf+TUpUQNsfy1ZGDjqRjrTJoSr5ajT7tjvXGGGqn1QvRIpBVe+xUskVXzib30wDppObidQ2AJ6MbK41HMk5z7SP8mY7Ho/imXIsaJ12XJjbIXt7rkJcvQKFDceCTo+jgR70ts4YEDF518a3yM/rO3CWr9ILtOMXE9LfWxPhk77pRHCG6gX+w== dennis@ansible"
         network_interfaces: DockerMasterNIC
         managed_disk_type: Standard_LRS
         image:
@@ -342,7 +342,7 @@
         ssh_password_enabled: false
         ssh_public_keys:
           - path: /home/groep04_admin/.ssh/authorized_keys
-            key_data: "ssh-rsa AAAAB3...dennis@ansible"
+            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC2IFiePXmnOeDEPmss1v8krYsPtxEUsWkRUuiY+Xyy+RQu1MpWGZ2eGe6glcxsmkV6SJWV8eMVEXXPELPfS3QBS20NY77D9lswPt2bKkio85mGYb+u1yaT9DGnUYjswAXO8kRBbjkTvgnS1bgFolrHBsKEeR4f8QsqU94/6Tosf61/8LDoEcHaOSYSGRayK8oHWa3aJjBY7ul8k36HUpP9omEQuJJ3Rtw9IFOoRm9sGbb4XUxMtj0h4DlaF3E8XivIpG3EUeP9Rclg2E8YuTznebJjobK8Rl9AqWhbY4fI7oqf1RpsjRNuY+cuQ4wAiw5n7U3LuCntZMK8uoEEAsvT6nzP6cJe6mjBuELe5l62bpNlPlPTcyu/agdIivyqKUlbJ96YgPPaUFu+4c+v/9tyt/JHcdb4QSkDaIz/tqBrS7bpLA42PIq7kZH/B0sShuS8p/utf2XNSDvmFg3yPMlfGbHu+dxymISbxgxo3+qDoV9vzF5IOQPC0Bwx3uDbN+/cVu4oVqqVCzw8ajtJnPbJGTFECl4sZXNfRkwKhznnDyxS4u/Pnej6lMUmbqwoFcBJHa+0Vb81vqMPl5xu0tfEeleph35fNFNaYQUP3Y6TC5qR2t0NzTZ6yvfG4xj1/9GKgb+XKJ+5qfZj63tUiK80AagXiCYms4CxdOEblpwRfw== dennis@ansible"
         network_interfaces: DockerWorkerNIC
         managed_disk_type: Standard_LRS
         image:
