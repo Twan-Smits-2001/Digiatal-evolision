@@ -169,7 +169,7 @@
         name: HAProxyNIC
         virtual_network: DockerVnet
         subnet: DockerSubnet
-        security_group: HAProxyNetworkSecurityGroup
+        security_group: HAProxyNSG
         ip_forwarding: true
         ip_configurations:
           - name: HAProxyNICConfig
