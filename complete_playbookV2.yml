@@ -7,19 +7,19 @@
 
     - name: Create resource group
       azure_rm_resourcegroup:
-        name: DockerResources
+        name: A2S2_groep_04
         location: westeurope
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
         resource_group: DockerResources
-        name: DockerVnet
+        name: A2S2_groep_04
         address_prefixes: "10.0.0.0/16"
 
     - name: Add subnet
       azure_rm_subnet:
         resource_group: DockerResources
-        name: DockerSubnet
+        name: A2S2_groep_04
         address_prefix: "10.0.1.0/24"
         virtual_network: DockerVnet
 
@@ -27,34 +27,34 @@
       azure_rm_publicipaddress:
         resource_group: DockerResources
         allocation_method: Static
-        name: GrafanaPublicIP
+        name: A2S2_groep_04
       register: grafana_ip
 
     - name: Create public IP for DockerMaster
       azure_rm_publicipaddress:
         resource_group: DockerResources
         allocation_method: Static
-        name: DockerMasterPublicIP
+        name: A2S2_groep_04
       register: docker_master_ip
 
     - name: Create public IP for DockerWorker
       azure_rm_publicipaddress:
         resource_group: DockerResources
         allocation_method: Static
-        name: DockerWorkerPublicIP
+        name: A2S2_groep_04
       register: docker_worker_ip
 
     - name: Create public IP for HAProxy
       azure_rm_publicipaddress:
         resource_group: DockerResources
         allocation_method: Static
-        name: HAProxyPublicIP
+        name: A2S2_groep_04
       register: haproxy_ip
 
     - name: Create Network Security Group for Grafana
       azure_rm_securitygroup:
         resource_group: DockerResources
-        name: GrafanaNSG
+        name: A2S2_groep_04
         rules:
           - name: SSH
             protocol: Tcp
@@ -72,7 +72,7 @@
     - name: Create Network Security Group for DockerMaster
       azure_rm_securitygroup:
         resource_group: DockerResources
-        name: DockerMasterNSG
+        name: A2S2_groep_04
         rules:
           - name: SSH
             protocol: Tcp
@@ -84,7 +84,7 @@
     - name: Create Network Security Group for DockerWorker
       azure_rm_securitygroup:
         resource_group: DockerResources
-        name: DockerWorkerNSG
+        name: A2S2_groep_04
         rules:
           - name: SSH
             protocol: Tcp
@@ -96,7 +96,7 @@
     - name: Create Network Security Group for HAProxy
       azure_rm_securitygroup:
         resource_group: DockerResources
-        name: HAProxyNSG
+        name: A2S2_groep_04
         rules:
           - name: SSH
             protocol: Tcp
