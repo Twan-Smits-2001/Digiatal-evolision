@@ -25,36 +25,36 @@
 
     - name: Create public IP for Grafana
       azure_rm_publicipaddress:
-        resource_group: DockerResources
+        resource_group: A2S2_groep_04
         allocation_method: Static
-        name: A2S2_groep_04
+        name: GrafanaPublicIP
       register: grafana_ip
 
     - name: Create public IP for DockerMaster
       azure_rm_publicipaddress:
-        resource_group: DockerResources
+        resource_group: A2S2_groep_04
         allocation_method: Static
-        name: A2S2_groep_04
+        name: DockerMasterPublicIP
       register: docker_master_ip
 
     - name: Create public IP for DockerWorker
       azure_rm_publicipaddress:
-        resource_group: DockerResources
+        resource_group: A2S2_groep_04
         allocation_method: Static
-        name: A2S2_groep_04
+        name: DockerworkerPublicIP
       register: docker_worker_ip
 
     - name: Create public IP for HAProxy
       azure_rm_publicipaddress:
-        resource_group: DockerResources
+        resource_group: A2S2_groep_04
         allocation_method: Static
-        name: A2S2_groep_04
+        name: HAProxyPublicIP
       register: haproxy_ip
 
     - name: Create Network Security Group for Grafana
       azure_rm_securitygroup:
-        resource_group: DockerResources
-        name: A2S2_groep_04
+        resource_group: A2S2_groep_04
+        name: GrafanaNetworkSecurityGroup
         rules:
           - name: SSH
             protocol: Tcp
@@ -71,8 +71,8 @@
 
     - name: Create Network Security Group for DockerMaster
       azure_rm_securitygroup:
-        resource_group: DockerResources
-        name: A2S2_groep_04
+        resource_group: A2S2_groep_04
+        name: DockerMasterNSG
         rules:
           - name: SSH
             protocol: Tcp
@@ -83,8 +83,8 @@
 
     - name: Create Network Security Group for DockerWorker
       azure_rm_securitygroup:
-        resource_group: DockerResources
-        name: A2S2_groep_04
+        resource_group: A2S2_groep_04
+        name: DockerWorkerNSG
         rules:
           - name: SSH
             protocol: Tcp
@@ -95,8 +95,8 @@
 
     - name: Create Network Security Group for HAProxy
       azure_rm_securitygroup:
-        resource_group: DockerResources
-        name: A2S2_groep_04
+        resource_group: A2S2_groep_04
+        name: HAProxyNSG
         rules:
           - name: SSH
             protocol: Tcp
@@ -117,27 +117,61 @@
             priority: 1003
             direction: Inbound
 
-    - name: Create virtual network interfaces
+    - name: Create virtual network interface for Grafana
       azure_rm_networkinterface:
-        resource_group: DockerResources
-        name: "{{ item.name }}"
+        resource_group: A2S2_groep_04
+        name: GrafanaNIC
         virtual_network: DockerVnet
         subnet: DockerSubnet
-        security_group: "{{ item.security_group }}"
+        security_group: GrafanaNetworkSecurityGroup
         ip_forwarding: true
         ip_configurations:
-          - name: "{{ item.name }}Config"
-            public_ip_address_name: "{{ item.public_ip }}"
+          - name: GrafanaNICConfig
+            public_ip_address_name: GrafanaPublicIP
             primary: true
-      loop:
-        - { name: GrafanaNIC, security_group: GrafanaNSG, public_ip: GrafanaPublicIP }
-        - { name: DockerMasterNIC, security_group: DockerMasterNSG, public_ip: DockerMasterPublicIP }
-        - { name: DockerWorkerNIC, security_group: DockerWorkerNSG, public_ip: DockerWorkerPublicIP }
-        - { name: HAProxyNIC, security_group: HAProxyNSG, public_ip: HAProxyPublicIP }
+
+    - name: Create virtual network interface for KubeMaster
+      azure_rm_networkinterface:
+        resource_group: A2S2_groep_04
+        name: KubeMasterNIC
+        virtual_network: DockerVnet
+        subnet: DockerSubnet
+        security_group: KubeMasterNSG
+        ip_forwarding: true
+        ip_configurations:
+          - name: KubeMasterNICConfig
+            public_ip_address_name: KubeMasterPublicIP
+            primary: true
+
+    - name: Create virtual network interface for KubeWorker
+      azure_rm_networkinterface:
+        resource_group: A2S2_groep_04
+        name: KubeWorkerNIC
+        virtual_network: DockerVnet
+        subnet: DockerSubnet
+        security_group: KubeWorkerNSG
+        ip_forwarding: true
+        ip_configurations:
+          - name: KubeWorkerNICConfig
+            public_ip_address_name: KubeWorkerPublicIP
+            primary: true
+
+    - name: Create virtual network interface for HAProxy
+      azure_rm_networkinterface:
+        resource_group: A2S2_groep_04
+        name: HAProxyNIC
+        virtual_network: DockerVnet
+        subnet: DockerSubnet
+        security_group: HAProxyNetworkSecurityGroup
+        ip_forwarding: true
+        ip_configurations:
+          - name: HAProxyNICConfig
+            public_ip_address_name: HAProxyPublicIP
+            primary: true
 
     - name: Deploy virtual machines
       azure_rm_virtualmachine:
-        resource_group: DockerResources
+        resource_group: A2S2_groep_04
         name: "{{ item.name }}"
         vm_size: Standard_B2ms
         admin_username: adminuser
