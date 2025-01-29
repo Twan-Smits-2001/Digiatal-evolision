@@ -12,14 +12,14 @@
 
     - name: Create virtual network
       azure_rm_virtualnetwork:
-        resource_group: DockerResources
-        name: A2S2_groep_04
+        resource_group: A2S2_groep_04
+        name: DockerVnet
         address_prefixes: "10.0.0.0/16"
 
     - name: Add subnet
       azure_rm_subnet:
-        resource_group: DockerResources
-        name: A2S2_groep_04
+        resource_group: A2S2_groep_04
+        name: DockerSubnet
         address_prefix: "10.0.1.0/24"
         virtual_network: DockerVnet
 
