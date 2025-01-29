@@ -300,40 +300,76 @@
             - systemctl restart haproxy
             - systemctl enable haproxy
 
-    # Create DockerMaster VM
-    - name: Create DockerMaster VM
-      azure_rm_virtualmachine:
-        resource_group: A2S2_groep_04
-        name: DockerMaster
-        vm_size: Standard_B2ms
-        admin_username: groep04_admin
-        ssh_password_enabled: false
-        ssh_public_keys:
-          - path: /home/groep04_admin/.ssh/authorized_keys
-            key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDEe4+H2IPFZnmwe57hlv3fwLu4yn6ZiiWZhaijnbDXG7kMOo19IV2nhSZ1LAFOYU54XZS55oTGUH5C21tThG0lwwrXJl21Z9PtAENSBiscgcjXR6m8+U65Cis7L6Mrorll18VxMETiSjyhaFD+liL/PHgvcE3c9rrFdlfwh5niGJqYoW6ARhZu7xahy2Y1UO7zVRJ2ciG21lZtMU3DuSi601lbIq2t/am+NrKxRbVikBSVwWdVv0UGUKGdK0k92Xrhh2VTflgXOMUmEVeDeFySWBUKysBgg4nJE8VoCzwKKatKHOnlphPhcNCbY6MmynwZZnkzMWfV6JbeGHB7dqaLEc1Ds9Oy/ZiNJRxo31AkpjwT+shE5DUnfrpClCvQIa5VYOBWPRyr1s8aCvjkv2TKOHr3EDiOOILm2mY9STPs2dunpa67pU07U3Qi9WKVqxraG8lfuLtzd8TTi92Uihjta90jnYR/GvyuZNOQ6ZfDB4hHPXEV40GGfEbf+TUpUQNsfy1ZGDjqRjrTJoSr5ajT7tjvXGGGqn1QvRIpBVe+xUskVXzib30wDppObidQ2AJ6MbK41HMk5z7SP8mY7Ho/imXIsaJ12XJjbIXt7rkJcvQKFDceCTo+jgR70ts4YEDF518a3yM/rO3CWr9ILtOMXE9LfWxPhk77pRHCG6gX+w== dennis@ansible"
-        network_interfaces: DockerMasterNIC
-        managed_disk_type: Standard_LRS
-        image:
-          offer: 0001-com-ubuntu-server-jammy
-          publisher: Canonical
-          sku: 22_04-lts
-          version: latest
-        custom_data: |
-          #cloud-config
-          package_update: true
-          package_upgrade: true
-          packages:
-            - docker.io
-            - docker-compose
-          runcmd:
-            - systemctl enable docker
-            - systemctl start docker
-            - usermod -aG docker groep04_admin
-            - docker swarm init --advertise-addr $(hostname -I | awk '{print $1}')
-            - docker network create --driver overlay my-overlay-network
+- name: Install Docker on DockerMaster
+  hosts: DockerMaster
+  become: yes
+  tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+        update_cache: yes
 
-    # Create DockerWorker VM
-    - name: Create DockerWorker VM
+    - name: Add Docker official GPG key
+      shell: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+    - name: Set up the Docker repository
+      shell: |
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    - name: Install Docker Engine
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+        update_cache: yes
+
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Add user to Docker group
+      user:
+        name: groep04_admin
+        groups: docker
+        append: yes
+
+- name: Initialize Docker Swarm on DockerMaster
+  hosts: DockerMaster
+  become: yes
+  tasks:
+    - name: Initialize Docker Swarm
+      shell: |
+        if ! docker info | grep -q "Swarm: active"; then
+          docker swarm init --advertise-addr $(hostname -I | awk '{print $1}')
+        fi
+      args:
+        executable: /bin/bash
+      register: swarm_init
+      changed_when: "'This node is already part of a swarm' not in swarm_init.stdout"
+
+    - name: Get Swarm join token
+      shell: docker swarm join-token worker -q
+      register: swarm_worker_token
+
+    - name: Debug Swarm token
+      debug:
+        msg: "Swarm token: {{ swarm_worker_token.stdout }}"
+
+- name: Create DockerWorker VM
+  hosts: localhost
+  tasks:
+    - name: Deploy DockerWorker VM
       azure_rm_virtualmachine:
         resource_group: A2S2_groep_04
         name: DockerWorker
@@ -365,13 +401,26 @@
             - pip3 install docker-compose
             - echo "Docker Worker node is ready."
 
-    # Fetch Swarm Join Command
-    - name: Get Swarm join token
-      shell: docker swarm join-token worker -q
-      register: swarm_worker_token
-      delegate_to: DockerMaster
+- name: Join DockerWorker to Swarm
+  hosts: DockerWorker
+  become: yes
+  tasks:
+    - name: Ensure Docker is Installed
+      apt:
+        name:
+          - docker.io
+          - docker-compose
+        state: present
+        update_cache: yes
 
-    # Join DockerWorker to Swarm
+    - name: Fetch Swarm Join Token
+      set_fact:
+        worker_token: "{{ hostvars['DockerMaster']['swarm_worker_token'].stdout }}"
+
     - name: Join DockerWorker to Swarm
-      shell: docker swarm join --token {{ swarm_worker_token.stdout }} $(hostname -I | awk '{print $1}'):2377
-      delegate_to: DockerWorker
+      shell: |
+        if ! docker info | grep -q "Swarm: active"; then
+          docker swarm join --token {{ worker_token }} $(hostname -I | awk '{print $1}'):2377
+        fi
+      args:
+        executable: /bin/bash
